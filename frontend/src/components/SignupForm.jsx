@@ -1,8 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function SignupForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [redirecting, setRedirecting] = useState(false);
+
+  useEffect(() => {
+    if (result && result.success) {
+      const timer = setTimeout(() => {
+        setRedirecting(true);
+        window.location.href = '/signin';
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [result]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -41,13 +53,13 @@ export default function SignupForm() {
       if (!response.ok) {
         setResult({ success: false, message: data.message || 'Signup failed' });
       } else {
-        setResult({ success: true, message: 'Account created successfully!' });
+        setResult({ 
+          success: true, 
+          message: 'Account created successfully! Redirecting to sign in...' 
+        });
       }
     } catch (error) {
-      setResult({
-        success: false,
-        message: error.message || 'An error occurred during signup',
-      });
+      setResult({ success: false, message: error.message || 'An error occurred during signup' });
     } finally {
       setIsLoading(false);
     }
@@ -75,9 +87,14 @@ export default function SignupForm() {
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-green-800">
-                    {result.message}
-                  </p>
+                  <p className="text-sm font-medium text-green-800">{result.message}</p>
+                  {redirecting && (
+                    <div className="mt-1">
+                      <div className="h-1 w-full bg-gray-200 rounded">
+                        <div className="h-1 bg-green-500 rounded animate-pulse"></div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="ml-auto pl-3">
                   <button
@@ -149,7 +166,7 @@ export default function SignupForm() {
         <div className="w-full max-w-2xl md:w-1/2 space-y-8 bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md">
           <div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-              Create your account
+              Create Your Account
             </h2>
           </div>
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -246,11 +263,20 @@ export default function SignupForm() {
             <div>
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || redirecting}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Creating account...' : 'Sign up'}
+                {isLoading ? 'Creating account...' : redirecting ? 'Redirecting...' : 'Sign Up'}
               </button>
+            </div>
+            
+            <div className="text-center mt-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Already have an account?{' '}
+                <a href="/signin" className="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400">
+                  Sign In
+                </a>
+              </p>
             </div>
           </form>
         </div>
