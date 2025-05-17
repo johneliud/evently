@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"database/sql"
-	"errors"
 	"log"
 
 	"github.com/johneliud/evently/backend/models"
@@ -20,15 +19,11 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 
 // CreateUser creates a new user in the database
 func (r *UserRepository) CreateUser(user models.UserSignupRequest) (int, error) {
-	var exists bool
-	err := r.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)", user.Email).Scan(&exists)
+	var id int
+	err := r.DB.QueryRow("SELECT id FROM users WHERE email = $1", user.Email).Scan(&id)
 	if err != nil {
-		log.Printf("Error checking if email exists: %v", err)
+		log.Println("User already exists with that email")
 		return 0, err
-	}
-	if exists {
-		log.Println("Email already exists")
-		return 0, errors.New("email already exists")
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
@@ -38,14 +33,14 @@ func (r *UserRepository) CreateUser(user models.UserSignupRequest) (int, error) 
 	}
 
 	// Insert the user
-	var id int
 	err = r.DB.QueryRow(
-		"INSERT INTO users (email, password, first_name, last_name) VALUES ($1, $2, $3, $4) RETURNING id",
-		user.Email, string(hashedPassword), user.FirstName, user.LastName,
+		"INSERT INTO users (email, password, confirmed_password, first_name, last_name) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+		user.Email, string(hashedPassword), string(hashedPassword), user.FirstName, user.LastName,
 	).Scan(&id)
 	if err != nil {
 		log.Printf("Error inserting user: %v", err)
+		return 0, err
 	}
 	log.Printf("User created with ID: %d", id)
-	return id, err
+	return id, nil
 }
