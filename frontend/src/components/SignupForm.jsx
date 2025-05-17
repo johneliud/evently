@@ -15,7 +15,7 @@ export default function SignupForm() {
     const firstName = formData.get('firstName');
     const lastName = formData.get('lastName');
     
-    if (password.trim() !== confirmedPassword.trim()) {
+    if (password !== confirmedPassword) {
       setResult({ success: false, message: 'Passwords do not match' });
       setIsLoading(false);
       return;
@@ -51,7 +51,7 @@ export default function SignupForm() {
   }
   
   return (
-    <div className="relative">
+    <>
       {/* Notification */}
       {result && (
         <div className="fixed top-16 right-4 z-50 max-w-sm w-full shadow-lg rounded-lg pointer-events-auto transition-opacity duration-300">
@@ -106,8 +106,8 @@ export default function SignupForm() {
       )}
       
       {/* Form */}
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md">
+      <main className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-2xl md:w-1/2 space-y-8 bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md">
           <div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
               Create your account
@@ -200,7 +200,7 @@ export default function SignupForm() {
             </div>
           </form>
         </div>
-      </div>
-    </div>
+      </main>
+    </>
   );
 }
