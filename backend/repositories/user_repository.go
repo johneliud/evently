@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 
 	"github.com/johneliud/evently/backend/models"
@@ -21,10 +22,13 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 func (r *UserRepository) CreateUser(user models.UserSignupRequest) (int, error) {
 	var id int
 	err := r.DB.QueryRow("SELECT id FROM users WHERE email = $1", user.Email).Scan(&id)
-	if err != nil {
-		log.Println("User already exists with that email")
-		return 0, err
+	if err == nil && id != 0 {
+		log.Println("User already exists with that email:", id, user.Email)
+		return id, fmt.Errorf("email already exists")
 	}
+
+	fmt.Println("id:", id)
+	fmt.Println("userEmail:", user.Email)
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
