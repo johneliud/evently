@@ -22,3 +22,9 @@ type UserSignupRequest struct {
 	FirstName         string `json:"first_name"`
 	LastName          string `json:"last_name"`
 }
+
+// UserSignInRequest represents the data needed for user signin
+type UserSignInRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
