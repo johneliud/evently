@@ -54,7 +54,7 @@ export default function SignupForm() {
     <>
       {/* Notification */}
       {result && (
-        <div className="fixed top-16 right-4 z-50 max-w-sm w-full shadow-lg rounded-lg pointer-events-auto transition-opacity duration-300">
+        <div className="fixed top-20 right-4 z-50 max-w-sm w-full shadow-lg rounded-lg pointer-events-auto transition-opacity duration-300">
           {result.success ? (
             <div className="rounded-lg bg-green-50 p-4 border border-green-200">
               <div className="flex items-start">
@@ -106,7 +106,7 @@ export default function SignupForm() {
       )}
       
       {/* Form */}
-      <main className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <main className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-2xl md:w-1/2 space-y-8 bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md">
           <div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
