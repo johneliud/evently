@@ -40,8 +40,9 @@ func main() {
 	// Create a new ServeMux
 	mux := http.NewServeMux()
 
-	// Register the signup handler
+	// Register handlers
 	mux.Handle("/api/signup", corsMiddleware(http.HandlerFunc(userHandler.SignUp)))
+	mux.Handle("/api/signin", corsMiddleware(http.HandlerFunc(userHandler.SignIn)))
 
 	// Start server
 	fmt.Println("Server starting on :9000")

@@ -1,11 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function Header() {
   const [darkMode, setDarkMode] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
+  useEffect(() => {
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token);
+  }, []);
   
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
     document.documentElement.classList.toggle('dark');
+  };
+  
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    window.location.href = '/signin';
   };
   
   return (
@@ -13,9 +26,34 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           <div className="flex items-center">
-            <span className="text-primary-600 dark:text-primary-400 text-2xl font-bold">Evently</span>
+            <a href="/" className="text-primary-600 dark:text-primary-400 text-2xl font-bold">Evently</a>
           </div>
-          <div>
+          
+          <div className="flex items-center space-x-4">
+            {isLoggedIn ? (
+              <button
+                onClick={handleLogout}
+                className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
+              >
+                Logout
+              </button>
+            ) : (
+              <div className="flex space-x-4">
+                <a 
+                  href="/signin" 
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
+                >
+                  Sign In
+                </a>
+                <a 
+                  href="/signup" 
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
+                >
+                  Sign Up
+                </a>
+              </div>
+            )}
+            
             <button
               onClick={toggleDarkMode}
               className="p-2 rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none"

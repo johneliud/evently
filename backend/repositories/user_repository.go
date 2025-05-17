@@ -44,3 +44,19 @@ func (r *UserRepository) CreateUser(user models.UserSignupRequest) (int, error) 
 	log.Printf("User created with ID: %d", id)
 	return id, nil
 }
+
+// GetUserByEmail retrieves a user by their email
+func (r *UserRepository) GetUserByEmail(email string) (*models.User, error) {
+	var user models.User
+	err := r.DB.QueryRow(
+		"SELECT id, email, password, first_name, last_name, created_at, updated_at FROM users WHERE email = $1",
+		email,
+	).Scan(&user.ID, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.CreatedAt, &user.UpdatedAt)
+	
+	if err != nil {
+		log.Printf("Error getting user by email: %v", err)
+		return nil, err
+	}
+	
+	return &user, nil
+}
