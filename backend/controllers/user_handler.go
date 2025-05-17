@@ -55,7 +55,7 @@ func (h *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err.Error() == "email already exists" {
 			http.Error(w, "Email already exists", http.StatusConflict)
-			log.Printf("Email already exists: %v\n", err)
+			log.Printf("Email already exists: %v\n", id)
 			return
 		}
 		http.Error(w, "Failed to create user", http.StatusInternalServerError)
