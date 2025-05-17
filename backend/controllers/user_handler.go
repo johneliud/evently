@@ -4,10 +4,14 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 	"strings"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/johneliud/evently/backend/models"
 	"github.com/johneliud/evently/backend/repositories"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // UserHandler handles user-related HTTP requests
@@ -30,7 +34,7 @@ func (h *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	var req models.UserSignupRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		log.Println("Invalid request body")
+		log.Printf("Invalid request body: %v\n", err)
 		return
 	}
 
@@ -67,4 +71,64 @@ func (h *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 		"message": "User created successfully",
 	})
 	log.Println("User created successfully")
+}
+
+// SignIn handles user authentication
+func (h *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		log.Println("Method not allowed")
+		return
+	}
+
+	var req models.UserSignInRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		log.Printf("Invalid request body: %v\n", err)
+		return
+	}
+
+	if strings.TrimSpace(req.Email) == "" || strings.TrimSpace(req.Password) == "" {
+		http.Error(w, "Email and password are required", http.StatusBadRequest)
+		log.Println("Email and password are required")
+		return
+	}
+
+	user, err := h.UserRepo.GetUserByEmail(req.Email)
+	if err != nil {
+		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+		log.Printf("Invalid email or password: %v\n", err)
+		return
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
+	if err != nil {
+		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+		log.Printf("Invalid email or password: %v\n", err)
+		return
+	}
+
+	// Create JWT token
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id": user.ID,
+		"email":   user.Email,
+		"exp":     time.Now().Add(time.Hour * 24).Unix(),
+	})
+
+	// Sign the token with a secret key
+	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET_KEY")))
+	if err != nil {
+		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
+		log.Printf("Failed to generate token: %v\n", err)
+		return
+	}
+
+	// Return success response with token
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"token":   tokenString,
+		"user_id": user.ID,
+		"message": "Login successful",
+	})
+	log.Println("Login successful")
 }
