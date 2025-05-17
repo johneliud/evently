@@ -16,8 +16,6 @@ func Connect() (*sql.DB, error) {
         "host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
         config.Host, config.Port, config.User, config.Password, config.DBName, config.SSLMode,
     )
-
-	fmt.Println("Connection string:", connStr)
     
     db, err := sql.Open("postgres", connStr)
     if err != nil {
