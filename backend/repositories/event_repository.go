@@ -44,7 +44,8 @@ func (r *EventRepository) GetEventsByUserID(userID int) ([]models.Event, error) 
 	}
 	defer rows.Close()
 
-	var events []models.Event
+	events := []models.Event{}
+	
 	for rows.Next() {
 		var event models.Event
 		if err := rows.Scan(
