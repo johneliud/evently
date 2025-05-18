@@ -31,12 +31,13 @@ export default function EventList() {
       }
 
       const data = await response.json();
-      setEvents(data);
+      setEvents(data || []);
     } catch (error) {
       setNotification({
         type: 'error',
         message: error.message || 'An error occurred while fetching events'
       });
+      setEvents([]);
     } finally {
       setIsLoading(false);
     }
@@ -71,7 +72,7 @@ export default function EventList() {
         <div className="flex justify-center items-center h-40">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
         </div>
-      ) : events.length === 0 ? (
+      ) : !events || events.length === 0 ? (
         <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 text-center">
           <p className="text-gray-600 dark:text-gray-400">You don't have any events yet.</p>
           <a 
