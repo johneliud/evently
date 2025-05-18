@@ -1,0 +1,113 @@
+import { useState, useEffect } from 'react';
+import Notification from './Notification';
+
+export default function EventList() {
+  const [events, setEvents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [notification, setNotification] = useState(null);
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  async function fetchEvents() {
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('You must be logged in to view events');
+      }
+
+      const response = await fetch('http://localhost:9000/api/events/user', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to fetch events');
+      }
+
+      const data = await response.json();
+      setEvents(data);
+    } catch (error) {
+      setNotification({
+        type: 'error',
+        message: error.message || 'An error occurred while fetching events'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  // Format date for display
+  function formatDate(dateString) {
+    const options = { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto p-4">
+      {notification && (
+        <Notification
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
+
+      <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Your Events</h2>
+      
+      {isLoading ? (
+        <div className="flex justify-center items-center h-40">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+        </div>
+      ) : events.length === 0 ? (
+        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 text-center">
+          <p className="text-gray-600 dark:text-gray-400">You don't have any events yet.</p>
+          <a 
+            href="/create-event" 
+            className="mt-4 inline-block px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700"
+          >
+            Create Your First Event
+          </a>
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2">
+          {events.map((event) => (
+            <div key={event.id} className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+              <div className="p-5">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{event.title}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{event.description}</p>
+                
+                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
+                  <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span>{formatDate(event.date)}</span>
+                </div>
+                
+                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                  <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>{event.location}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
