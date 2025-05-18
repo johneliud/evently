@@ -69,3 +69,32 @@ func (h *EventHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	log.Println("Event created successfully")
 }
 
+// GetUserEvents handles retrieving events for a user
+func (h *EventHandler) GetUserEvents(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		log.Println("Method not allowed")
+		return
+	}
+
+	// Get user ID from token
+	userID, err := getUserIDFromToken(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		log.Printf("Unauthorized: %v\n", err)
+		return
+	}
+
+	// Get events
+	events, err := h.EventRepo.GetEventsByUserID(userID)
+	if err != nil {
+		http.Error(w, "Failed to get events", http.StatusInternalServerError)
+		log.Printf("Failed to get events: %v\n", err)
+		return
+	}
+
+	// Return events
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(events)
+}
+
