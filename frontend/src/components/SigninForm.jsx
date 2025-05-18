@@ -74,7 +74,7 @@ export default function SigninForm() {
         />
       )}
       
-      <main className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      <main className="min-h-[calc(100vh-80px)] flex items-center justify-center px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-md md:w-1/2 space-y-8 bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md">
           <div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
