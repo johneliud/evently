@@ -12,9 +12,9 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
+	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal("Error loading .env file: ", err)
 	}
 
 	// Connect to the database
@@ -33,9 +33,11 @@ func main() {
 
 	// Initialize repositories
 	userRepo := repositories.NewUserRepository(database)
+	eventRepo := repositories.NewEventRepository(database)
 
 	// Initialize controllers
 	userHandler := controllers.NewUserHandler(userRepo)
+	eventHandler := controllers.NewEventHandler(eventRepo)
 
 	// Create a new ServeMux
 	mux := http.NewServeMux()
@@ -43,6 +45,8 @@ func main() {
 	// Register handlers
 	mux.Handle("/api/signup", corsMiddleware(http.HandlerFunc(userHandler.SignUp)))
 	mux.Handle("/api/signin", corsMiddleware(http.HandlerFunc(userHandler.SignIn)))
+	mux.Handle("/api/events", corsMiddleware(http.HandlerFunc(eventHandler.CreateEvent)))
+	mux.Handle("/api/events/user", corsMiddleware(http.HandlerFunc(eventHandler.GetUserEvents)))
 
 	// Start server
 	fmt.Println("Server starting on :9000")
