@@ -93,6 +93,10 @@ func (h *EventHandler) GetUserEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if events == nil {
+		events = []models.Event{}
+	}
+
 	// Return events
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(events)
