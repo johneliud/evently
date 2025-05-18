@@ -98,3 +98,41 @@ func (h *EventHandler) GetUserEvents(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(events)
 }
 
+// Helper function to extract user ID from JWT token
+func getUserIDFromToken(r *http.Request) (int, error) {
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		err := errors.New("authorization header is required")
+		log.Printf("Authorization header is required: %v\n", err)
+		return 0, err
+	}
+
+	// Remove 'Bearer ' prefix
+	tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
+
+	// Parse the token
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// Validate the signing method
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, jwt.ErrSignatureInvalid
+		}
+		return []byte(os.Getenv("JWT_SECRET_KEY")), nil
+	})
+
+	if err != nil {
+		log.Printf("Failed to parse token: %v\n", err)
+		return 0, err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		// Convert user_id to int
+		userIDFloat, ok := claims["user_id"].(float64)
+		if !ok {
+			return 0, jwt.ErrTokenInvalidClaims
+		}
+		userID := int(userIDFloat)
+		return userID, nil
+	}
+
+	return 0, jwt.ErrTokenInvalidClaims
+}
