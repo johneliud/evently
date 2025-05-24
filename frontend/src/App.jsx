@@ -43,6 +43,8 @@ function App() {
         return requireAuth(<EventList />);
       case '/upcoming-events':
         return <UpcomingEvents />;
+      case '/search':
+        return <EventSearch />;
       default: {
         // Check if user is authenticated
         const token = localStorage.getItem('token');
