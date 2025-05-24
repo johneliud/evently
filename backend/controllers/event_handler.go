@@ -102,6 +102,32 @@ func (h *EventHandler) GetUserEvents(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(events)
 }
 
+// GetUpcomingEvents handles retrieving upcoming public events
+func (h *EventHandler) GetUpcomingEvents(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		log.Println("Method not allowed")
+		return
+	}
+
+	// Get upcoming events
+	events, err := h.EventRepo.GetUpcomingEvents()
+	if err != nil {
+		http.Error(w, "Failed to get upcoming events", http.StatusInternalServerError)
+		log.Printf("Failed to get upcoming events: %v\n", err)
+		return
+	}
+
+	// Ensure we return an empty array instead of null if no events are found
+	if events == nil {
+		events = []models.Event{}
+	}
+
+	// Return events
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(events)
+}
+
 // Helper function to extract user ID from JWT token
 func getUserIDFromToken(r *http.Request) (int, error) {
 	authHeader := r.Header.Get("Authorization")
