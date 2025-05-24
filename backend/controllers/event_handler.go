@@ -1,11 +1,13 @@
 package controllers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -126,6 +128,49 @@ func (h *EventHandler) GetUpcomingEvents(w http.ResponseWriter, r *http.Request)
 	// Return events
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(events)
+}
+
+// GetEventByID handles retrieving a single event by ID
+func (h *EventHandler) GetEventByID(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		log.Println("Method not allowed")
+		return
+	}
+
+	// Extract event ID from URL path
+	path := r.URL.Path
+	segments := strings.Split(path, "/")
+	if len(segments) < 3 {
+		http.Error(w, "Invalid URL", http.StatusBadRequest)
+		log.Println("Invalid URL")
+		return
+	}
+
+	idStr := segments[len(segments)-1]
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid event ID", http.StatusBadRequest)
+		log.Printf("Invalid event ID: %v\n", err)
+		return
+	}
+
+	// Get event by ID
+	event, err := h.EventRepo.GetEventByID(id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, "Event not found", http.StatusNotFound)
+			log.Printf("Event not found: %v\n", err)
+			return
+		}
+		http.Error(w, "Failed to get event", http.StatusInternalServerError)
+		log.Printf("Failed to get event: %v\n", err)
+		return
+	}
+
+	// Return event
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(event)
 }
 
 // Helper function to extract user ID from JWT token
