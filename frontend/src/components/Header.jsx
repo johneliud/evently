@@ -23,20 +23,20 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white dark:bg-gray-800 shadow-md">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center py-4">
+    <header className="bg-white dark:bg-gray-800 shadow-md w-full">
+      <div className="w-full px-10">
+        <div className="flex justify-between items-center py-5">
           <a
             href="/"
-            className="text-2xl font-bold text-primary-600 dark:text-primary-400"
+            className="text-4xl font-bold text-primary-600 dark:text-primary-400"
           >
             Evently
           </a>
 
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-8">
             <a 
               href="/upcoming-events" 
-              className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
+              className="font-semibold text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
             >
               Upcoming Events
             </a>
@@ -45,19 +45,19 @@ export default function Header() {
               <>
                 <a 
                   href="/my-events" 
-                  className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
+                  className="font-semibold text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
                 >
                   My Events
                 </a>
                 <a 
                   href="/create-event" 
-                  className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
+                  className="font-semibold text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
                 >
                   Create Event
                 </a>
                 <button
                   onClick={handleLogout}
-                  className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
+                  className="font-semibold px-8 py-2 rounded-md border-2 border-primary-600 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   Logout
                 </button>
@@ -66,13 +66,13 @@ export default function Header() {
               <>
                 <a 
                   href="/signin" 
-                  className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
+                  className="font-semibold px-8 py-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 border-2 border-primary-600"
                 >
                   Sign In
                 </a>
                 <a 
                   href="/signup" 
-                  className="px-4 py-2 rounded-md bg-primary-600 text-white hover:bg-primary-700"
+                  className="font-semibold px-8 py-2 rounded-md bg-primary-600 text-white hover:bg-primary-700"
                 >
                   Sign Up
                 </a>
@@ -85,7 +85,7 @@ export default function Header() {
             >
               {darkMode ? (
                 <svg
-                  className="h-5 w-5"
+                  className="h-8 w-8"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -99,7 +99,7 @@ export default function Header() {
                 </svg>
               ) : (
                 <svg
-                  className="h-5 w-5"
+                  className="h-8 w-8"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -146,10 +146,17 @@ export default function Header() {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-gray-200 dark:border-gray-700">
             <div className="flex flex-col space-y-4">
+              <a
+                href="/upcoming-events"
+                className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
+              >
+                Upcoming Events
+              </a>
+              
               {isLoggedIn ? (
                 <>
                   <a
-                    href="/"
+                    href="/my-events"
                     className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
                   >
                     My Events
@@ -162,7 +169,7 @@ export default function Header() {
                   </a>
                   <button
                     onClick={handleLogout}
-                    className="text-left text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
+                    className="text-left px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors w-full"
                   >
                     Logout
                   </button>
