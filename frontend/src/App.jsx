@@ -7,6 +7,7 @@ import EventForm from './components/EventForm';
 import EventList from './components/EventList';
 import UpcomingEvents from './components/UpcomingEvents';
 import EventDetails from './components/EventDetails';
+import EventSearch from './components/EventSearch';
 
 function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
