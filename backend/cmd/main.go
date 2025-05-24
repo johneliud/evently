@@ -48,7 +48,18 @@ func main() {
 	mux.Handle("/api/events", corsMiddleware(http.HandlerFunc(eventHandler.CreateEvent)))
 	mux.Handle("/api/events/user", corsMiddleware(http.HandlerFunc(eventHandler.GetUserEvents)))
 	mux.Handle("/api/events/upcoming", corsMiddleware(http.HandlerFunc(eventHandler.GetUpcomingEvents)))
-	mux.Handle("/api/events/", corsMiddleware(http.HandlerFunc(eventHandler.GetEventByID)))
+	mux.Handle("/api/events/", corsMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			eventHandler.GetEventByID(w, r)
+		case http.MethodDelete:
+			eventHandler.DeleteEvent(w, r)
+		case http.MethodPut:
+			eventHandler.UpdateEvent(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})))
 
 	// Start server
 	fmt.Println("Server starting on :9000")
