@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/johneliud/evently/backend/models"
@@ -321,6 +322,64 @@ func (h *EventHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 		"message": "Event updated successfully",
 	})
 	log.Printf("Event %d updated successfully by user %d\n", eventID, userID)
+}
+
+// SearchEvents handles searching and filtering events
+func (h *EventHandler) SearchEvents(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		log.Println("Method not allowed")
+		return
+	}
+
+	// Parse query parameters
+	query := r.URL.Query().Get("q")
+	location := r.URL.Query().Get("location")
+	startDateStr := r.URL.Query().Get("start_date")
+	endDateStr := r.URL.Query().Get("end_date")
+
+	var startDate, endDate *time.Time
+
+	// Parse start date if provided
+	if startDateStr != "" {
+		parsedDate, err := time.Parse("2006-01-02", startDateStr)
+		if err != nil {
+			http.Error(w, "Invalid start date format. Use YYYY-MM-DD", http.StatusBadRequest)
+			log.Printf("Invalid start date format: %v\n", err)
+			return
+		}
+		startDate = &parsedDate
+	}
+
+	// Parse end date if provided
+	if endDateStr != "" {
+		parsedDate, err := time.Parse("2006-01-02", endDateStr)
+		if err != nil {
+			http.Error(w, "Invalid end date format. Use YYYY-MM-DD", http.StatusBadRequest)
+			log.Printf("Invalid end date format: %v\n", err)
+			return
+		}
+		// Set the end date to the end of the day
+		parsedDate = parsedDate.Add(23 * time.Hour).Add(59 * time.Minute).Add(59 * time.Second)
+		endDate = &parsedDate
+	}
+
+	// Search events
+	events, err := h.EventRepo.SearchEvents(query, location, startDate, endDate)
+	if err != nil {
+		http.Error(w, "Failed to search events", http.StatusInternalServerError)
+		log.Printf("Failed to search events: %v\n", err)
+		return
+	}
+
+	// Ensure we return an empty array instead of null if no events are found
+	if events == nil {
+		events = []models.EventWithOrganizer{}
+	}
+
+	// Return events
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(events)
 }
 
 // Helper function to extract user ID from JWT token
