@@ -66,3 +66,45 @@ func (r *EventRepository) GetEventsByUserID(userID int) ([]models.Event, error) 
 
 	return events, nil
 }
+
+// GetUpcomingEvents retrieves all upcoming events
+func (r *EventRepository) GetUpcomingEvents() ([]models.Event, error) {
+	rows, err := r.DB.Query(`
+		SELECT e.id, e.title, e.description, e.date, e.location, e.user_id, e.created_at, e.updated_at,
+			   u.first_name, u.last_name
+		FROM events e
+		JOIN users u ON e.user_id = u.id
+		WHERE e.date > NOW()
+		ORDER BY e.date ASC
+		LIMIT 20
+	`)
+	if err != nil {
+		log.Printf("Error getting upcoming events: %v", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	events := []models.Event{}
+	
+	for rows.Next() {
+		var event models.EventWithOrganizer
+		if err := rows.Scan(
+			&event.ID,
+			&event.Title,
+			&event.Description,
+			&event.Date,
+			&event.Location,
+			&event.UserID,
+			&event.CreatedAt,
+			&event.UpdatedAt,
+			&event.OrganizerFirstName,
+			&event.OrganizerLastName,
+		); err != nil {
+			log.Printf("Error scanning event row: %v", err)
+			return nil, err
+		}
+		events = append(events, event.Event)
+	}
+
+	return events, nil
+}
