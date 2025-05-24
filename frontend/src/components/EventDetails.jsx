@@ -1,10 +1,16 @@
 import { useState, useEffect } from 'react';
 import Notification from './Notification';
+import EditEventForm from './EditEventForm';
 
 export default function EventDetails() {
   const [event, setEvent] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [notification, setNotification] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Get the current user ID from localStorage
+  const currentUserId = parseInt(localStorage.getItem('userId'), 10);
 
   useEffect(() => {
     // Extract event ID from URL
@@ -45,6 +51,44 @@ export default function EventDetails() {
       });
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function handleDeleteEvent() {
+    setIsDeleting(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('You must be logged in to delete an event');
+      }
+
+      const response = await fetch(`http://localhost:9000/api/events/${event.id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to delete event');
+      }
+
+      // Show success notification
+      setNotification({
+        type: 'success',
+        message: 'Event deleted successfully!',
+      });
+
+      // Redirect to the upcoming events page
+      window.location.href = '/upcoming-events';
+    } catch (error) {
+      setNotification({
+        type: 'error',
+        message: error.message || 'An error occurred while deleting the event'
+      });
+    } finally {
+      setIsDeleting(false);
     }
   }
 
