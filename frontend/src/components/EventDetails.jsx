@@ -1,0 +1,164 @@
+import { useState, useEffect } from 'react';
+import Notification from './Notification';
+
+export default function EventDetails() {
+  const [event, setEvent] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [notification, setNotification] = useState(null);
+
+  useEffect(() => {
+    // Extract event ID from URL
+    const path = window.location.pathname;
+    const segments = path.split('/');
+    const eventId = segments[segments.length - 1];
+    
+    if (eventId) {
+      fetchEventDetails(eventId);
+    } else {
+      setNotification({
+        type: 'error',
+        message: 'Invalid event ID'
+      });
+      setIsLoading(false);
+    }
+  }, []);
+
+  async function fetchEventDetails(eventId) {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`http://localhost:9000/api/events/${eventId}`);
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Event not found');
+        }
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to fetch event details');
+      }
+
+      const data = await response.json();
+      setEvent(data);
+    } catch (error) {
+      setNotification({
+        type: 'error',
+        message: error.message || 'An error occurred while fetching event details'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  // Format date for display
+  function formatDate(dateString) {
+    const options = { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  }
+
+  // Calculate days remaining until event
+  function getDaysRemaining(dateString) {
+    const eventDate = new Date(dateString);
+    const today = new Date();
+    
+    // Reset time part for accurate day calculation
+    today.setHours(0, 0, 0, 0);
+    const eventDateNoTime = new Date(eventDate);
+    eventDateNoTime.setHours(0, 0, 0, 0);
+    
+    const diffTime = eventDateNoTime - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Tomorrow';
+    return `${diffDays} days away`;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="max-w-4xl mx-auto p-4">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!event && !isLoading) {
+    return (
+      <div className="max-w-4xl mx-auto p-4">
+        {notification && (
+          <Notification
+            type={notification.type}
+            message={notification.message}
+            onClose={() => setNotification(null)}
+          />
+        )}
+        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 text-center">
+          <p className="text-gray-600 dark:text-gray-400">Event not found.</p>
+          <a 
+            href="/upcoming-events" 
+            className="mt-4 inline-block px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700"
+          >
+            View All Events
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto p-4">
+      {notification && (
+        <Notification
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
+
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+        <div className="p-6">
+          <div className="flex justify-between items-start mb-4">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{event.title}</h1>
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200">
+              {getDaysRemaining(event.date)}
+            </span>
+          </div>
+
+          <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-4">
+            <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span>{formatDate(event.date)}</span>
+          </div>
+          
+          <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-6">
+            <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span>{event.location}</span>
+          </div>
+
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">About this event</h2>
+            <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">{event.description || 'No description provided.'}</p>
+          </div>
+
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Organizer</h2>
+            <p className="text-gray-700 dark:text-gray-300">
+              {event.organizer_first_name} {event.organizer_last_name}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
