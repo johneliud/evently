@@ -127,6 +127,9 @@ export default function EditEventForm({ eventId, onCancel, onSuccess }) {
     );
   }
 
+  // Get today's date in YYYY-MM-DD format for min attribute
+  const today = new Date().toISOString().split('T')[0];
+
   return (
     <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
       <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Edit Event</h2>
@@ -169,20 +172,6 @@ export default function EditEventForm({ eventId, onCancel, onSuccess }) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Date *
-            </label>
-            <input
-              type="date"
-              name="date"
-              id="date"
-              required
-              defaultValue={formatDateForInput(event.date)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            />
-          </div>
-
-          <div>
             <label htmlFor="time" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Time *
             </label>
@@ -192,6 +181,21 @@ export default function EditEventForm({ eventId, onCancel, onSuccess }) {
               id="time"
               required
               defaultValue={formatTimeForInput(event.date)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Date *
+            </label>
+            <input
+              type="date"
+              name="date"
+              id="date"
+              required
+              min={today}
+              defaultValue={formatDateForInput(event.date)}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />
           </div>

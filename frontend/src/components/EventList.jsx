@@ -57,7 +57,7 @@ export default function EventList() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
+    <div className="w-full mx-auto">
       {notification && (
         <Notification
           type={notification.type}
@@ -83,12 +83,12 @@ export default function EventList() {
           </a>
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {events.map((event) => (
             <div key={event.id} className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
               <div className="p-5">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{event.title}</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{event.description}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">{event.description}</p>
                 
                 <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
                   <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">

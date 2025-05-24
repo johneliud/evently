@@ -66,7 +66,7 @@ function App() {
   return (
     <div className="min-h-screen w-full">
       <Header />
-      <div className="container mx-auto py-8 px-4">
+      <div className="w-full py-5 px-10">
         {renderContent()}
       </div>
     </div>

@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function Notification({ type, message, onClose, showProgress = false }) {
   return (
-    <div className="fixed top-20 right-4 z-50 max-w-sm w-full shadow-lg rounded-lg pointer-events-auto transition-opacity duration-300">
+    <div className="fixed top-20.5 right-4 z-50 max-w-sm w-full shadow-lg rounded-lg pointer-events-auto transition-opacity duration-300">
       {type === 'success' ? (
         <div className="rounded-lg bg-green-50 p-4 border border-green-200">
           <div className="flex items-start">
