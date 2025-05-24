@@ -2,7 +2,9 @@ package repositories
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
+	"time"
 
 	"github.com/johneliud/evently/backend/models"
 )
@@ -160,4 +162,85 @@ func (r *EventRepository) UpdateEvent(eventID int, event models.EventRequest) er
 		return err
 	}
 	return nil
+}
+
+// SearchEvents searches for events based on title, location, and date range
+func (r *EventRepository) SearchEvents(query string, location string, startDate, endDate *time.Time) ([]models.EventWithOrganizer, error) {
+	// Build the query dynamically based on provided filters
+	queryBuilder := `
+		SELECT e.id, e.title, e.description, e.date, e.location, e.user_id, e.created_at, e.updated_at,
+			   u.first_name, u.last_name
+		FROM events e
+		JOIN users u ON e.user_id = u.id
+		WHERE 1=1
+	`
+	var args []interface{}
+	argPosition := 1
+
+	// Add title search if query is provided
+	if query != "" {
+		queryBuilder += fmt.Sprintf(" AND e.title ILIKE $%d", argPosition)
+		args = append(args, "%"+query+"%")
+		argPosition++
+	}
+
+	// Add location filter if provided
+	if location != "" {
+		queryBuilder += fmt.Sprintf(" AND e.location ILIKE $%d", argPosition)
+		args = append(args, "%"+location+"%")
+		argPosition++
+	}
+
+	// Add date range filters if provided
+	if startDate != nil {
+		queryBuilder += fmt.Sprintf(" AND e.date >= $%d", argPosition)
+		args = append(args, startDate)
+		argPosition++
+	}
+
+	if endDate != nil {
+		queryBuilder += fmt.Sprintf(" AND e.date <= $%d", argPosition)
+		args = append(args, endDate)
+		argPosition++
+	}
+
+	// Only show future events by default if no date filters are provided
+	if startDate == nil && endDate == nil {
+		queryBuilder += " AND e.date >= NOW()"
+	}
+
+	// Order by date
+	queryBuilder += " ORDER BY e.date ASC LIMIT 100"
+
+	// Execute the query
+	rows, err := r.DB.Query(queryBuilder, args...)
+	if err != nil {
+		log.Printf("Error searching events: %v", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	events := []models.EventWithOrganizer{}
+	
+	for rows.Next() {
+		var event models.EventWithOrganizer
+		if err := rows.Scan(
+			&event.ID,
+			&event.Title,
+			&event.Description,
+			&event.Date,
+			&event.Location,
+			&event.UserID,
+			&event.CreatedAt,
+			&event.UpdatedAt,
+			&event.OrganizerFirstName,
+			&event.OrganizerLastName,
+		); err != nil {
+			log.Printf("Error scanning event row: %v", err)
+			return nil, err
+		}
+		events = append(events, event)
+	}
+
+	return events, nil
 }
