@@ -5,6 +5,7 @@ import SignupForm from './components/SignupForm';
 import SigninForm from './components/SigninForm';
 import EventForm from './components/EventForm';
 import EventList from './components/EventList';
+import UpcomingEvents from './components/UpcomingEvents';
 
 function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
@@ -33,12 +34,13 @@ function App() {
         return requireAuth(<EventForm />);
       case '/my-events':
         return requireAuth(<EventList />);
+      case '/upcoming-events':
+        return <UpcomingEvents />;
       default: {
         // Check if user is authenticated
         const token = localStorage.getItem('token');
         if (!token) {
-          window.location.href = '/signin';
-          return null;
+          return <UpcomingEvents />;
         }
         return <EventList />;
       }
