@@ -79,9 +79,9 @@ export default function EventDetails() {
         type: 'success',
         message: 'Event deleted successfully!',
       });
-
-      // Redirect to the upcoming events page
-      window.location.href = '/upcoming-events';
+      
+      // Set event to null to show the "Event not found" view
+      setEvent(null);
     } catch (error) {
       setNotification({
         type: 'error',
