@@ -6,6 +6,7 @@ import SigninForm from './components/SigninForm';
 import EventForm from './components/EventForm';
 import EventList from './components/EventList';
 import UpcomingEvents from './components/UpcomingEvents';
+import EventDetails from './components/EventDetails';
 
 function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
@@ -25,6 +26,11 @@ function App() {
 
   // Simple routing
   const renderContent = () => {
+    // Check if path matches event details pattern (/event/{id})
+    if (currentPath.match(/^\/event\/\d+$/)) {
+      return <EventDetails />;
+    }
+
     switch (currentPath) {
       case '/signin':
         return <SigninForm />;
