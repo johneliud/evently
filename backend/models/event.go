@@ -14,6 +14,13 @@ type Event struct {
     UpdatedAt   time.Time `json:"updated_at"`
 }
 
+// EventWithOrganizer extends Event with organizer information
+type EventWithOrganizer struct {
+    Event
+    OrganizerFirstName string `json:"organizer_first_name"`
+    OrganizerLastName  string `json:"organizer_last_name"`
+}
+
 // EventRequest represents the data needed to create or update an event
 type EventRequest struct {
     Title       string    `json:"title"`
