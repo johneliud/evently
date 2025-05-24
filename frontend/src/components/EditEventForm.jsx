@@ -8,29 +8,28 @@ export default function EditEventForm({ eventId, onCancel, onSuccess }) {
   const [notification, setNotification] = useState(null);
 
   useEffect(() => {
+    const fetchEvent = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch(`http://localhost:9000/api/events/${eventId}`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch event details');
+        }
+
+        const data = await response.json();
+        setEvent(data);
+      } catch (error) {
+        setNotification({
+          type: 'error',
+          message: error.message || 'An error occurred while fetching event details'
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
     fetchEvent();
   }, [eventId]);
-
-  async function fetchEvent() {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`http://localhost:9000/api/events/${eventId}`);
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch event details');
-      }
-
-      const data = await response.json();
-      setEvent(data);
-    } catch (error) {
-      setNotification({
-        type: 'error',
-        message: error.message || 'An error occurred while fetching event details'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }
 
   async function handleSubmit(e) {
     e.preventDefault();
