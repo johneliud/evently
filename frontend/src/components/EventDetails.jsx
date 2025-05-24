@@ -114,7 +114,7 @@ export default function EventDetails() {
   async function handleRsvp(status) {
     if (!isLoggedIn) {
       // Use window.location instead of navigate
-      window.location.href = '/login';
+      window.location.href = '/signin';
       return;
     }
 
@@ -412,10 +412,10 @@ export default function EventDetails() {
               {!isLoggedIn && (
                 <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                   <a
-                    href="/login"
+                    href="/signin"
                     className="text-primary-600 hover:text-primary-500 dark:text-primary-400"
                   >
-                    Log in
+                    Sign In
                   </a>{' '}
                   to RSVP to this event.
                 </p>
