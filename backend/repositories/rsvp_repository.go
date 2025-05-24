@@ -104,7 +104,13 @@ func (r *RSVPRepository) GetRSVPsByEvent(eventID int) ([]models.RSVPWithUser, er
         FROM event_rsvps r
         JOIN users u ON r.user_id = u.id
         WHERE r.event_id = $1
-        ORDER BY r.created_at DESC
+        ORDER BY 
+            CASE 
+                WHEN r.status = 'going' THEN 1
+                WHEN r.status = 'maybe' THEN 2
+                WHEN r.status = 'not_going' THEN 3
+            END,
+            r.updated_at DESC
     `, eventID)
     
     if err != nil {
