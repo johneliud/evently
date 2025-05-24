@@ -34,16 +34,23 @@ export default function Header() {
           </a>
 
           <div className="hidden md:flex items-center space-x-4">
+            <a 
+              href="/upcoming-events" 
+              className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
+            >
+              Upcoming Events
+            </a>
+            
             {isLoggedIn ? (
               <>
-                <a
-                  href="/"
+                <a 
+                  href="/my-events" 
                   className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
                 >
                   My Events
                 </a>
-                <a
-                  href="/create-event"
+                <a 
+                  href="/create-event" 
                   className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
                 >
                   Create Event
@@ -57,14 +64,14 @@ export default function Header() {
               </>
             ) : (
               <>
-                <a
-                  href="/signin"
+                <a 
+                  href="/signin" 
                   className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
                 >
                   Sign In
                 </a>
-                <a
-                  href="/signup"
+                <a 
+                  href="/signup" 
                   className="px-4 py-2 rounded-md bg-primary-600 text-white hover:bg-primary-700"
                 >
                   Sign Up
