@@ -138,3 +138,26 @@ func (r *EventRepository) GetEventByID(id int) (*models.EventWithOrganizer, erro
 	
 	return &event, nil
 }
+
+// DeleteEvent deletes an event by ID
+func (r *EventRepository) DeleteEvent(eventID int) error {
+	_, err := r.DB.Exec("DELETE FROM events WHERE id = $1", eventID)
+	if err != nil {
+		log.Printf("Error deleting event: %v", err)
+		return err
+	}
+	return nil
+}
+
+// UpdateEvent updates an existing event
+func (r *EventRepository) UpdateEvent(eventID int, event models.EventRequest) error {
+	_, err := r.DB.Exec(
+		"UPDATE events SET title = $1, description = $2, date = $3, location = $4, updated_at = NOW() WHERE id = $5",
+		event.Title, event.Description, event.Date, event.Location, eventID,
+	)
+	if err != nil {
+		log.Printf("Error updating event: %v", err)
+		return err
+	}
+	return nil
+}
