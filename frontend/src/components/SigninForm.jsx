@@ -78,7 +78,7 @@ export default function SigninForm() {
         <div className="w-full max-w-md md:w-1/2 space-y-8 bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md">
           <div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-              Signin To Your Account
+              Welcome Back
             </h2>
           </div>
           
