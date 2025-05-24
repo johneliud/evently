@@ -40,6 +40,12 @@ export default function Header() {
             >
               Upcoming Events
             </a>
+            <a 
+              href="/search" 
+              className="font-semibold text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
+            >
+              Search Events
+            </a>
             
             {isLoggedIn ? (
               <>
@@ -151,6 +157,12 @@ export default function Header() {
                 className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
               >
                 Upcoming Events
+              </a>
+              <a
+                href="/search"
+                className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
+              >
+                Search Events
               </a>
               
               {isLoggedIn ? (
