@@ -108,3 +108,33 @@ func (r *EventRepository) GetUpcomingEvents() ([]models.Event, error) {
 
 	return events, nil
 }
+
+// GetEventByID retrieves a single event by ID with organizer information
+func (r *EventRepository) GetEventByID(id int) (*models.EventWithOrganizer, error) {
+	var event models.EventWithOrganizer
+	err := r.DB.QueryRow(`
+		SELECT e.id, e.title, e.description, e.date, e.location, e.user_id, e.created_at, e.updated_at,
+			   u.first_name, u.last_name
+		FROM events e
+		JOIN users u ON e.user_id = u.id
+		WHERE e.id = $1
+	`, id).Scan(
+		&event.ID,
+		&event.Title,
+		&event.Description,
+		&event.Date,
+		&event.Location,
+		&event.UserID,
+		&event.CreatedAt,
+		&event.UpdatedAt,
+		&event.OrganizerFirstName,
+		&event.OrganizerLastName,
+	)
+	
+	if err != nil {
+		log.Printf("Error getting event by ID: %v", err)
+		return nil, err
+	}
+	
+	return &event, nil
+}
