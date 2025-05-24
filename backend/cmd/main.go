@@ -48,6 +48,7 @@ func main() {
 	mux.Handle("/api/events", corsMiddleware(http.HandlerFunc(eventHandler.CreateEvent)))
 	mux.Handle("/api/events/user", corsMiddleware(http.HandlerFunc(eventHandler.GetUserEvents)))
 	mux.Handle("/api/events/upcoming", corsMiddleware(http.HandlerFunc(eventHandler.GetUpcomingEvents)))
+	mux.Handle("/api/events/", corsMiddleware(http.HandlerFunc(eventHandler.GetEventByID)))
 
 	// Start server
 	fmt.Println("Server starting on :9000")
