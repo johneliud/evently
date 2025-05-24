@@ -18,6 +18,8 @@ export default function EventDetails() {
     not_going: 0,
   });
   const [isRsvpLoading, setIsRsvpLoading] = useState(false);
+  const [attendees, setAttendees] = useState([]);
+  const [isAttendeesLoading, setIsAttendeesLoading] = useState(false);
 
   // Get the current user ID from localStorage
   const currentUserId = parseInt(localStorage.getItem('userId'), 10);
@@ -33,11 +35,18 @@ export default function EventDetails() {
     } else {
       setNotification({
         type: 'error',
-        message: 'Invalid event ID',
+        message: 'Invalid event ID'
       });
       setIsLoading(false);
     }
   }, [id, isLoggedIn]);
+
+  // Add a new useEffect to fetch attendees when the event is loaded and user is the creator
+  useEffect(() => {
+    if (event && currentUserId === event.user_id) {
+      fetchAttendees(id);
+    }
+  }, [event, currentUserId, id]);
 
   async function fetchEventDetails(eventId) {
     setIsLoading(true);
@@ -307,6 +316,36 @@ export default function EventDetails() {
     );
   }
 
+  async function fetchAttendees(eventId) {
+    setIsAttendeesLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`http://localhost:9000/api/events/${eventId}/rsvps`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to fetch attendees');
+      }
+
+      const data = await response.json();
+      setAttendees(data || []);
+    } catch (error) {
+      console.error('Error fetching attendees:', error);
+      setNotification({
+        type: 'error',
+        message: error.message || 'An error occurred while fetching attendees'
+      });
+    } finally {
+      setIsAttendeesLoading(false);
+    }
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-4">
       {notification && (
@@ -442,31 +481,69 @@ export default function EventDetails() {
           </div>
 
           {isEventCreator && (
-            <div className="border-t border-gray-200 dark:border-gray-700 mt-6 pt-6">
-              <div className="flex flex-col sm:flex-row sm:justify-end gap-3">
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
-                >
-                  Edit Event
-                </button>
-                <button
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        'Are you sure you want to delete this event? This action cannot be undone.'
-                      )
-                    ) {
-                      handleDeleteEvent();
-                    }
-                  }}
-                  disabled={isDeleting}
-                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
-                >
-                  {isDeleting ? 'Deleting...' : 'Delete Event'}
-                </button>
+            <>
+              <div className="border-t border-gray-200 dark:border-gray-700 mt-6 pt-6">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Attendees</h2>
+                
+                {isAttendeesLoading ? (
+                  <div className="flex justify-center items-center h-20">
+                    <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary-500"></div>
+                  </div>
+                ) : attendees.length === 0 ? (
+                  <p className="text-gray-500 dark:text-gray-400">No one has RSVP'd to this event yet.</p>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-3 text-sm font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 pb-2">
+                      <div>Name</div>
+                      <div>Status</div>
+                      <div>RSVP Date</div>
+                    </div>
+                    
+                    {attendees.map((attendee) => (
+                      <div key={attendee.id} className="grid grid-cols-3 text-sm py-2">
+                        <div className="text-gray-900 dark:text-white">
+                          {attendee.first_name} {attendee.last_name}
+                        </div>
+                        <div>
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                            ${attendee.status === 'going' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
+                              attendee.status === 'maybe' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' : 
+                              'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
+                            {attendee.status === 'going' ? 'Going' : 
+                             attendee.status === 'maybe' ? 'Maybe' : 'Not Going'}
+                          </span>
+                        </div>
+                        <div className="text-gray-500 dark:text-gray-400">
+                          {new Date(attendee.updated_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
+              
+              <div className="border-t border-gray-200 dark:border-gray-700 mt-6 pt-6">
+                <div className="flex flex-col sm:flex-row sm:justify-end gap-3">
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
+                  >
+                    Edit Event
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (window.confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+                        handleDeleteEvent();
+                      }
+                    }}
+                    disabled={isDeleting}
+                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                  >
+                    {isDeleting ? 'Deleting...' : 'Delete Event'}
+                  </button>
+                </div>
+              </div>
+            </>
           )}
         </div>
       </div>
