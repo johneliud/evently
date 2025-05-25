@@ -1,11 +1,14 @@
 package controllers
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/johneliud/evently/backend/models"
@@ -98,8 +101,8 @@ func (h *CalendarHandler) CalendarCallback(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// Redirect to a success page
-	http.Redirect(w, r, "/calendar-connected", http.StatusFound)
+	// Redirect to the frontend success page
+	http.Redirect(w, r, "http://localhost:5173/calendar-connected", http.StatusFound)
 }
 
 // AddEventToCalendar adds an event to the user's Google Calendar
@@ -122,10 +125,30 @@ func (h *CalendarHandler) AddEventToCalendar(w http.ResponseWriter, r *http.Requ
 	var req struct {
 		EventID int `json:"event_id"`
 	}
+
+	bodyBytes, _ := io.ReadAll(r.Body)
+	r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		log.Printf("Invalid request body: %v\n", err)
-		return
+		var stringReq struct {
+			EventID string `json:"event_id"`
+		}
+		r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+		if jsonErr := json.NewDecoder(r.Body).Decode(&stringReq); jsonErr == nil {
+
+			eventID, convErr := strconv.Atoi(stringReq.EventID)
+			if convErr == nil {
+				req.EventID = eventID
+			} else {
+				http.Error(w, "Invalid event ID format", http.StatusBadRequest)
+				log.Printf("Invalid event ID format: %v\n", convErr)
+				return
+			}
+		} else {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			log.Printf("Invalid request body: %v\n", err)
+			return
+		}
 	}
 
 	// Get the event from the database
