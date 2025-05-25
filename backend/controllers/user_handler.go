@@ -145,7 +145,7 @@ func (h *UserHandler) GoogleAuthURL(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate a random state token to prevent request forgery
-	state := fmt.Sprintf("auth-%d", time.Now().Unix())
+	state := fmt.Sprintf("auth-%d", time.Now().UnixNano())
 
 	// Get client ID and secret from environment variables
 	clientID := os.Getenv("GOOGLE_CLIENT_ID")
@@ -170,11 +170,12 @@ func (h *UserHandler) GoogleAuthURL(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Store state in a cookie for verification
+	// Use a more secure cookie setting
 	http.SetCookie(w, &http.Cookie{
 		Name:     "oauth_state",
 		Value:    state,
 		Path:     "/",
-		MaxAge:   int(time.Hour.Seconds()),
+		MaxAge:   3600, // 1 hour
 		HttpOnly: true,
 		Secure:   false, // Set to true in production with HTTPS
 		SameSite: http.SameSiteLaxMode,
@@ -202,13 +203,36 @@ func (h *UserHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	state := r.URL.Query().Get("state")
 	code := r.URL.Query().Get("code")
 
-	// Verify state to prevent CSRF
-	stateCookie, err := r.Cookie("oauth_state")
-	if err != nil || stateCookie.Value != state {
-		http.Error(w, "Invalid state parameter", http.StatusBadRequest)
-		log.Println("Invalid state parameter")
+	if state == "" || code == "" {
+		log.Println("Missing state or code parameter")
+		http.Error(w, "Missing required parameters", http.StatusBadRequest)
 		return
 	}
+
+	// Verify state to prevent CSRF
+	stateCookie, err := r.Cookie("oauth_state")
+	if err != nil {
+		log.Printf("Error retrieving state cookie: %v", err)
+		http.Error(w, "Invalid state parameter", http.StatusBadRequest)
+		return
+	}
+	
+	log.Printf("State from cookie: %s, State from query: %s", stateCookie.Value, state)
+	
+	if stateCookie.Value != state {
+		log.Printf("State mismatch: cookie=%s, query=%s", stateCookie.Value, state)
+		http.Error(w, "Invalid state parameter", http.StatusBadRequest)
+		return
+	}
+
+	// Clear the state cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "oauth_state",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+	})
 
 	// Get client ID and secret from environment variables
 	clientID := os.Getenv("GOOGLE_CLIENT_ID")
