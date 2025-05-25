@@ -250,7 +250,7 @@ func (h *UserHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		// User doesn't exist, create a new one
 		// Generate a random password for Google users
 		randomPassword := fmt.Sprintf("google_%d", time.Now().UnixNano())
-		
+
 		// Create user
 		id, err := h.UserRepo.CreateUser(models.UserSignupRequest{
 			Email:             userInfo.Email,
@@ -264,7 +264,7 @@ func (h *UserHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Failed to create user: %v\n", err)
 			return
 		}
-		
+
 		// Get the newly created user
 		user, err = h.UserRepo.GetUserByID(id)
 		if err != nil {

@@ -47,7 +47,7 @@ func (r *EventRepository) GetEventsByUserID(userID int) ([]models.Event, error) 
 	defer rows.Close()
 
 	events := []models.Event{}
-	
+
 	for rows.Next() {
 		var event models.Event
 		if err := rows.Scan(
@@ -87,7 +87,7 @@ func (r *EventRepository) GetUpcomingEvents() ([]models.Event, error) {
 	defer rows.Close()
 
 	events := []models.Event{}
-	
+
 	for rows.Next() {
 		var event models.EventWithOrganizer
 		if err := rows.Scan(
@@ -132,12 +132,12 @@ func (r *EventRepository) GetEventByID(id int) (*models.EventWithOrganizer, erro
 		&event.OrganizerFirstName,
 		&event.OrganizerLastName,
 	)
-	
+
 	if err != nil {
 		log.Printf("Error getting event by ID: %v", err)
 		return nil, err
 	}
-	
+
 	return &event, nil
 }
 
@@ -221,7 +221,7 @@ func (r *EventRepository) SearchEvents(query string, location string, startDate,
 	defer rows.Close()
 
 	events := []models.EventWithOrganizer{}
-	
+
 	for rows.Next() {
 		var event models.EventWithOrganizer
 		if err := rows.Scan(

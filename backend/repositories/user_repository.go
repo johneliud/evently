@@ -53,12 +53,12 @@ func (r *UserRepository) GetUserByEmail(email string) (*models.User, error) {
 		"SELECT id, email, password, first_name, last_name, created_at, updated_at FROM users WHERE email = $1",
 		email,
 	).Scan(&user.ID, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.CreatedAt, &user.UpdatedAt)
-	
+
 	if err != nil {
 		log.Printf("Error getting user by email: %v", err)
 		return nil, err
 	}
-	
+
 	return &user, nil
 }
 
