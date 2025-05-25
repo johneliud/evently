@@ -24,7 +24,7 @@ type CalendarRepository struct {
 func NewCalendarRepository() (*CalendarRepository, error) {
 	credFile := os.Getenv("GOOGLE_CREDENTIALS_FILE")
 	if credFile == "" {
-		credFile = "google_client_credentials.json" // Default file name
+		credFile = "google_client_credentials.json"
 	}
 
 	data, err := os.ReadFile(credFile)
@@ -38,6 +38,9 @@ func NewCalendarRepository() (*CalendarRepository, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse client credentials: %v", err)
 	}
+
+	redirectURI := "http://localhost:9000/api/calendar/callback"
+	config.RedirectURL = redirectURI
 
 	return &CalendarRepository{
 		Config: config,
