@@ -92,6 +92,13 @@ export default function GoogleCalendarButton({ eventId }) {
 
       setIsLoading(true);
 
+      // Convert eventId to a number if it's a string
+      const eventIdNumber = parseInt(eventId, 10);
+      
+      if (isNaN(eventIdNumber)) {
+        throw new Error('Invalid event ID');
+      }
+
       const response = await fetch(
         'http://localhost:9000/api/calendar/add-event',
         {
@@ -101,7 +108,7 @@ export default function GoogleCalendarButton({ eventId }) {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            event_id: eventId,
+            event_id: eventIdNumber,
           }),
         }
       );
