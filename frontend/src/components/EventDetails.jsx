@@ -36,7 +36,7 @@ export default function EventDetails() {
     } else {
       setNotification({
         type: 'error',
-        message: 'Invalid event ID'
+        message: 'Invalid event ID',
       });
       setIsLoading(false);
     }
@@ -323,11 +323,14 @@ export default function EventDetails() {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const response = await fetch(`http://localhost:9000/api/events/${eventId}/rsvps`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `http://localhost:9000/api/events/${eventId}/rsvps`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         const data = await response.json();
@@ -340,7 +343,7 @@ export default function EventDetails() {
       console.error('Error fetching attendees:', error);
       setNotification({
         type: 'error',
-        message: error.message || 'An error occurred while fetching attendees'
+        message: error.message || 'An error occurred while fetching attendees',
       });
     } finally {
       setIsAttendeesLoading(false);
@@ -413,7 +416,6 @@ export default function EventDetails() {
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
                 Calendar Integration
               </h3>
-              {/* Make sure id is passed as a number */}
               <GoogleCalendarButton eventId={parseInt(id, 10)} />
             </div>
           )}
@@ -494,14 +496,18 @@ export default function EventDetails() {
           {isEventCreator && (
             <>
               <div className="border-t border-gray-200 dark:border-gray-700 mt-6 pt-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Attendees</h2>
-                
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                  Attendees
+                </h2>
+
                 {isAttendeesLoading ? (
                   <div className="flex justify-center items-center h-20">
                     <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary-500"></div>
                   </div>
                 ) : attendees.length === 0 ? (
-                  <p className="text-gray-500 dark:text-gray-400">No one has RSVP'd to this event yet.</p>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    No one has RSVP'd to this event yet.
+                  </p>
                 ) : (
                   <div className="space-y-4">
                     <div className="grid grid-cols-3 text-sm font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 pb-2">
@@ -509,19 +515,31 @@ export default function EventDetails() {
                       <div>Status</div>
                       <div>RSVP Date</div>
                     </div>
-                    
+
                     {attendees.map((attendee) => (
-                      <div key={attendee.id} className="grid grid-cols-3 text-sm py-2">
+                      <div
+                        key={attendee.id}
+                        className="grid grid-cols-3 text-sm py-2"
+                      >
                         <div className="text-gray-900 dark:text-white">
                           {attendee.first_name} {attendee.last_name}
                         </div>
                         <div>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                            ${attendee.status === 'going' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
-                              attendee.status === 'maybe' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' : 
-                              'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
-                            {attendee.status === 'going' ? 'Going' : 
-                             attendee.status === 'maybe' ? 'Maybe' : 'Not Going'}
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                            ${
+                              attendee.status === 'going'
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                : attendee.status === 'maybe'
+                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                            }`}
+                          >
+                            {attendee.status === 'going'
+                              ? 'Going'
+                              : attendee.status === 'maybe'
+                              ? 'Maybe'
+                              : 'Not Going'}
                           </span>
                         </div>
                         <div className="text-gray-500 dark:text-gray-400">
@@ -532,7 +550,7 @@ export default function EventDetails() {
                   </div>
                 )}
               </div>
-              
+
               <div className="border-t border-gray-200 dark:border-gray-700 mt-6 pt-6">
                 <div className="flex flex-col sm:flex-row sm:justify-end gap-3">
                   <button
@@ -543,7 +561,11 @@ export default function EventDetails() {
                   </button>
                   <button
                     onClick={() => {
-                      if (window.confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+                      if (
+                        window.confirm(
+                          'Are you sure you want to delete this event? This action cannot be undone.'
+                        )
+                      ) {
                         handleDeleteEvent();
                       }
                     }}

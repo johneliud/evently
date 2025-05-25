@@ -94,7 +94,7 @@ export default function GoogleCalendarButton({ eventId }) {
 
       // Convert eventId to a number if it's a string
       const eventIdNumber = parseInt(eventId, 10);
-      
+
       if (isNaN(eventIdNumber)) {
         throw new Error('Invalid event ID');
       }
@@ -131,7 +131,6 @@ export default function GoogleCalendarButton({ eventId }) {
         );
       }
 
-      // We're not using the data, so we don't need to store it
       await response.json();
 
       setNotification({
