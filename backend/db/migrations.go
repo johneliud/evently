@@ -43,12 +43,12 @@ func RunMigrations(db *sql.DB) error {
 		return err
 	}
 
-	// Create event_rsvps table
+	// Create RSVPs table
 	_, err = db.Exec(`
-        CREATE TABLE IF NOT EXISTS event_rsvps (
+        CREATE TABLE IF NOT EXISTS rsvps (
             id SERIAL PRIMARY KEY,
             event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
-            user_id INTEGER NOT NULL REFERENCES users(id),
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             status VARCHAR(20) NOT NULL CHECK (status IN ('going', 'maybe', 'not_going')),
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -56,25 +56,25 @@ func RunMigrations(db *sql.DB) error {
         )
     `)
 	if err != nil {
-		log.Println("Error creating event_rsvps table: ", err)
+		log.Println("Error creating rsvps table: ", err)
 		return err
 	}
 
-	// Create user_calendar_tokens table
+	// Create calendar_tokens table
 	_, err = db.Exec(`
-        CREATE TABLE IF NOT EXISTS user_calendar_tokens (
+        CREATE TABLE IF NOT EXISTS calendar_tokens (
             id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL REFERENCES users(id),
-            token TEXT NOT NULL,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            token_data TEXT NOT NULL,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(user_id)
         )
     `)
 	if err != nil {
-		log.Println("Error creating user_calendar_tokens table: ", err)
+		log.Println("Error creating calendar_tokens table: ", err)
 		return err
 	}
 
-	return err
+	return nil
 }
