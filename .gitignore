@@ -1,2 +1,5 @@
 # All environment variable files
 *.env
+
+# Google client credentials file
+google_client_credentials.json
