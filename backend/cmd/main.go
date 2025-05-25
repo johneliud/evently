@@ -55,6 +55,9 @@ func main() {
 	// Register handlers
 	mux.Handle("/api/signup", corsMiddleware(http.HandlerFunc(userHandler.SignUp)))
 	mux.Handle("/api/signin", corsMiddleware(http.HandlerFunc(userHandler.SignIn)))
+	// Add Google OAuth routes
+	mux.Handle("/api/auth/google", corsMiddleware(http.HandlerFunc(userHandler.GoogleAuthURL)))
+	mux.Handle("/api/auth/google/callback", corsMiddleware(http.HandlerFunc(userHandler.GoogleCallback)))
 	mux.Handle("/api/events", corsMiddleware(http.HandlerFunc(eventHandler.CreateEvent)))
 	mux.Handle("/api/events/user", corsMiddleware(http.HandlerFunc(eventHandler.GetUserEvents)))
 	mux.Handle("/api/events/upcoming", corsMiddleware(http.HandlerFunc(eventHandler.GetUpcomingEvents)))
