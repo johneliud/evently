@@ -413,7 +413,8 @@ export default function EventDetails() {
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
                 Calendar Integration
               </h3>
-              <GoogleCalendarButton eventId={id} />
+              {/* Make sure id is passed as a number */}
+              <GoogleCalendarButton eventId={parseInt(id, 10)} />
             </div>
           )}
 
