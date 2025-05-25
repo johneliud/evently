@@ -9,6 +9,7 @@ import (
 	"github.com/johneliud/evently/backend/controllers"
 	"github.com/johneliud/evently/backend/db"
 	"github.com/johneliud/evently/backend/repositories"
+	"github.com/johneliud/evently/backend/services"
 	"github.com/joho/godotenv"
 )
 
@@ -32,6 +33,9 @@ func main() {
 
 	fmt.Println("Successfully connected to database")
 
+	// Initialize email service
+	emailService := services.NewEmailService()
+
 	// Initialize repositories
 	userRepo := repositories.NewUserRepository(database)
 	eventRepo := repositories.NewEventRepository(database)
@@ -46,7 +50,7 @@ func main() {
 	// Initialize handlers
 	userHandler := controllers.NewUserHandler(userRepo)
 	eventHandler := controllers.NewEventHandler(eventRepo)
-	rsvpHandler := controllers.NewRSVPHandler(rsvpRepo, eventRepo)
+	rsvpHandler := controllers.NewRSVPHandler(rsvpRepo, eventRepo, userRepo, emailService)
 	calendarHandler := controllers.NewCalendarHandler(calendarRepo, eventRepo)
 
 	// Create a new ServeMux
@@ -114,7 +118,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 		if origin == "" {
 			origin = "http://localhost:5173" // Default to frontend URL if Origin header is not set
 		}
-		
+
 		w.Header().Set("Access-Control-Allow-Origin", origin)
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")

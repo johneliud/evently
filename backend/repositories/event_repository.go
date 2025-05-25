@@ -105,7 +105,22 @@ func (r *EventRepository) GetUpcomingEvents() ([]models.Event, error) {
 			log.Printf("Error scanning event row: %v", err)
 			return nil, err
 		}
-		events = append(events, event.Event)
+
+		// Convert EventWithOrganizer to Event
+		eventModel := models.Event{
+			ID:                 event.ID,
+			Title:              event.Title,
+			Description:        event.Description,
+			Date:               event.Date,
+			Location:           event.Location,
+			UserID:             event.UserID,
+			CreatedAt:          event.CreatedAt,
+			UpdatedAt:          event.UpdatedAt,
+			OrganizerFirstName: event.OrganizerFirstName,
+			OrganizerLastName:  event.OrganizerLastName,
+		}
+
+		events = append(events, eventModel)
 	}
 
 	return events, nil

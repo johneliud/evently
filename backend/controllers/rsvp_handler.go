@@ -10,18 +10,28 @@ import (
 
 	"github.com/johneliud/evently/backend/models"
 	"github.com/johneliud/evently/backend/repositories"
+	"github.com/johneliud/evently/backend/services"
 )
 
 // RSVPHandler handles RSVP-related HTTP requests
 type RSVPHandler struct {
-	RSVPRepo  *repositories.RSVPRepository
-	EventRepo *repositories.EventRepository
+	RSVPRepo     *repositories.RSVPRepository
+	EventRepo    *repositories.EventRepository
+	UserRepo     *repositories.UserRepository
+	EmailService *services.EmailService
 }
 
-func NewRSVPHandler(rsvpRepo *repositories.RSVPRepository, eventRepo *repositories.EventRepository) *RSVPHandler {
+func NewRSVPHandler(
+	rsvpRepo *repositories.RSVPRepository,
+	eventRepo *repositories.EventRepository,
+	userRepo *repositories.UserRepository,
+	emailService *services.EmailService,
+) *RSVPHandler {
 	return &RSVPHandler{
-		RSVPRepo:  rsvpRepo,
-		EventRepo: eventRepo,
+		RSVPRepo:     rsvpRepo,
+		EventRepo:    eventRepo,
+		UserRepo:     userRepo,
+		EmailService: emailService,
 	}
 }
 
@@ -58,11 +68,19 @@ func (h *RSVPHandler) CreateOrUpdateRSVP(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Check if event exists
-	_, err = h.EventRepo.GetEventByID(eventID)
+	// Check if event exists and get event details
+	event, err := h.EventRepo.GetEventByID(eventID)
 	if err != nil {
 		http.Error(w, "Event not found", http.StatusNotFound)
 		log.Printf("Event not found: %v\n", err)
+		return
+	}
+
+	// Get user details for email
+	user, err := h.UserRepo.GetUserByID(userID)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		log.Printf("User not found: %v\n", err)
 		return
 	}
 
@@ -81,12 +99,80 @@ func (h *RSVPHandler) CreateOrUpdateRSVP(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	// Get previous RSVP status to check if this is a new RSVP or an update
+	previousRSVP, err := h.RSVPRepo.GetRSVPByEventAndUser(eventID, userID)
+	if err != nil {
+		log.Printf("Error getting previous RSVP: %v\n", err)
+		return
+	}
+	isNewRSVP := previousRSVP == nil
+
 	// Create or update RSVP
 	err = h.RSVPRepo.CreateOrUpdateRSVP(eventID, userID, req.Status)
 	if err != nil {
 		http.Error(w, "Failed to create/update RSVP", http.StatusInternalServerError)
 		log.Printf("Failed to create/update RSVP: %v\n", err)
 		return
+	}
+
+	// Get event organizer details
+	eventOrganizer, err := h.UserRepo.GetUserByID(event.UserID)
+	if err != nil {
+		log.Printf("Warning: Could not get event organizer details: %v\n", err)
+	} else {
+		// Send email notifications
+		if isNewRSVP || (previousRSVP != nil && previousRSVP.Status != req.Status) {
+			// Only send emails if this is a new RSVP or the status has changed
+			// Send notification to organizer
+			if eventOrganizer != nil && eventOrganizer.Email != "" {
+				go func() {
+					// Convert to the expected type
+					eventModel := &models.Event{
+						ID:                 event.ID,
+						Title:              event.Title,
+						Description:        event.Description,
+						Date:               event.Date,
+						Location:           event.Location,
+						UserID:             event.UserID,
+						CreatedAt:          event.CreatedAt,
+						UpdatedAt:          event.UpdatedAt,
+						OrganizerEmail:     eventOrganizer.Email,
+						OrganizerFirstName: event.OrganizerFirstName,
+						OrganizerLastName:  event.OrganizerLastName,
+					}
+
+					err := h.EmailService.SendRSVPNotificationToOrganizer(eventModel, user, req.Status)
+					if err != nil {
+						log.Printf("Error sending organizer notification: %v\n", err)
+					}
+				}()
+			}
+
+			// Send confirmation to user
+			if user.Email != "" {
+				go func() {
+					// Convert to the expected type
+					eventModel := &models.Event{
+						ID:                 event.ID,
+						Title:              event.Title,
+						Description:        event.Description,
+						Date:               event.Date,
+						Location:           event.Location,
+						UserID:             event.UserID,
+						CreatedAt:          event.CreatedAt,
+						UpdatedAt:          event.UpdatedAt,
+						OrganizerEmail:     eventOrganizer.Email,
+						OrganizerFirstName: event.OrganizerFirstName,
+						OrganizerLastName:  event.OrganizerLastName,
+					}
+
+					err := h.EmailService.SendRSVPConfirmationToUser(eventModel, user, req.Status)
+					if err != nil {
+						log.Printf("Error sending user confirmation: %v\n", err)
+					}
+				}()
+			}
+		}
 	}
 
 	// Return success response
@@ -219,14 +305,14 @@ func (h *RSVPHandler) GetRSVPCount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get RSVP count
-	count, err := h.RSVPRepo.GetRSVPCountByEvent(eventID)
+	count, err := h.RSVPRepo.GetRSVPCount(eventID)
 	if err != nil {
 		http.Error(w, "Failed to get RSVP count", http.StatusInternalServerError)
 		log.Printf("Failed to get RSVP count: %v\n", err)
 		return
 	}
 
-	// Return count
+	// Return RSVP count
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(count)
 }
@@ -285,7 +371,7 @@ func (h *RSVPHandler) GetRSVPs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get RSVPs
-	rsvps, err := h.RSVPRepo.GetRSVPsByEvent(eventID)
+	rsvps, err := h.RSVPRepo.GetRSVPs(eventID)
 	if err != nil {
 		http.Error(w, "Failed to get RSVPs", http.StatusInternalServerError)
 		log.Printf("Failed to get RSVPs: %v\n", err)

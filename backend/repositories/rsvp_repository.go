@@ -16,14 +16,36 @@ func NewRSVPRepository(db *sql.DB) *RSVPRepository {
 	return &RSVPRepository{DB: db}
 }
 
-// CreateOrUpdateRSVP creates or updates a user's RSVP for an event
+// CreateOrUpdateRSVP creates or updates an RSVP
 func (r *RSVPRepository) CreateOrUpdateRSVP(eventID, userID int, status string) error {
-	_, err := r.DB.Exec(`
-        INSERT INTO event_rsvps (event_id, user_id, status)
-        VALUES ($1, $2, $3)
-        ON CONFLICT (event_id, user_id) 
-        DO UPDATE SET status = $3, updated_at = NOW()
-    `, eventID, userID, status)
+	// Check if RSVP already exists
+	var exists bool
+	err := r.DB.QueryRow(`
+		SELECT EXISTS(
+			SELECT 1 FROM rsvps 
+			WHERE event_id = $1 AND user_id = $2
+		)
+	`, eventID, userID).Scan(&exists)
+
+	if err != nil {
+		log.Printf("Error checking if RSVP exists: %v", err)
+		return err
+	}
+
+	if exists {
+		// Update existing RSVP
+		_, err = r.DB.Exec(`
+			UPDATE rsvps 
+			SET status = $1, updated_at = NOW() 
+			WHERE event_id = $2 AND user_id = $3
+		`, status, eventID, userID)
+	} else {
+		// Create new RSVP
+		_, err = r.DB.Exec(`
+			INSERT INTO rsvps (event_id, user_id, status) 
+			VALUES ($1, $2, $3)
+		`, eventID, userID, status)
+	}
 
 	if err != nil {
 		log.Printf("Error creating/updating RSVP: %v", err)
@@ -33,14 +55,14 @@ func (r *RSVPRepository) CreateOrUpdateRSVP(eventID, userID int, status string) 
 	return nil
 }
 
-// GetRSVPByEventAndUser gets a user's RSVP for an event
+// GetRSVPByEventAndUser gets an RSVP by event ID and user ID
 func (r *RSVPRepository) GetRSVPByEventAndUser(eventID, userID int) (*models.RSVP, error) {
 	var rsvp models.RSVP
 	err := r.DB.QueryRow(`
-        SELECT id, event_id, user_id, status, created_at, updated_at
-        FROM event_rsvps
-        WHERE event_id = $1 AND user_id = $2
-    `, eventID, userID).Scan(
+		SELECT id, event_id, user_id, status, created_at, updated_at
+		FROM rsvps
+		WHERE event_id = $1 AND user_id = $2
+	`, eventID, userID).Scan(
 		&rsvp.ID,
 		&rsvp.EventID,
 		&rsvp.UserID,
@@ -61,57 +83,16 @@ func (r *RSVPRepository) GetRSVPByEventAndUser(eventID, userID int) (*models.RSV
 	return &rsvp, nil
 }
 
-// DeleteRSVP deletes a user's RSVP for an event
-func (r *RSVPRepository) DeleteRSVP(eventID, userID int) error {
-	_, err := r.DB.Exec("DELETE FROM event_rsvps WHERE event_id = $1 AND user_id = $2", eventID, userID)
-	if err != nil {
-		log.Printf("Error deleting RSVP: %v", err)
-		return err
-	}
-	return nil
-}
-
-// GetRSVPCountByEvent gets the count of RSVPs by status for an event
-func (r *RSVPRepository) GetRSVPCountByEvent(eventID int) (*models.RSVPCount, error) {
-	var count models.RSVPCount
-
-	err := r.DB.QueryRow(`
-        SELECT 
-            COUNT(CASE WHEN status = 'going' THEN 1 END) as going,
-            COUNT(CASE WHEN status = 'maybe' THEN 1 END) as maybe,
-            COUNT(CASE WHEN status = 'not_going' THEN 1 END) as not_going
-        FROM event_rsvps
-        WHERE event_id = $1
-    `, eventID).Scan(
-		&count.Going,
-		&count.Maybe,
-		&count.NotGoing,
-	)
-
-	if err != nil {
-		log.Printf("Error getting RSVP count: %v", err)
-		return nil, err
-	}
-
-	return &count, nil
-}
-
-// GetRSVPsByEvent gets all RSVPs for an event with user information
-func (r *RSVPRepository) GetRSVPsByEvent(eventID int) ([]models.RSVPWithUser, error) {
+// GetRSVPs gets all RSVPs for an event
+func (r *RSVPRepository) GetRSVPs(eventID int) ([]models.RSVPWithUser, error) {
 	rows, err := r.DB.Query(`
-        SELECT r.id, r.event_id, r.user_id, r.status, r.created_at, r.updated_at,
-               u.first_name, u.last_name
-        FROM event_rsvps r
-        JOIN users u ON r.user_id = u.id
-        WHERE r.event_id = $1
-        ORDER BY 
-            CASE 
-                WHEN r.status = 'going' THEN 1
-                WHEN r.status = 'maybe' THEN 2
-                WHEN r.status = 'not_going' THEN 3
-            END,
-            r.updated_at DESC
-    `, eventID)
+		SELECT r.id, r.event_id, r.user_id, r.status, r.created_at, r.updated_at,
+			   u.first_name, u.last_name, u.email
+		FROM rsvps r
+		JOIN users u ON r.user_id = u.id
+		WHERE r.event_id = $1
+		ORDER BY r.created_at DESC
+	`, eventID)
 
 	if err != nil {
 		log.Printf("Error getting RSVPs: %v", err)
@@ -119,11 +100,10 @@ func (r *RSVPRepository) GetRSVPsByEvent(eventID int) ([]models.RSVPWithUser, er
 	}
 	defer rows.Close()
 
-	rsvps := []models.RSVPWithUser{}
-
+	var rsvps []models.RSVPWithUser
 	for rows.Next() {
 		var rsvp models.RSVPWithUser
-		if err := rows.Scan(
+		err := rows.Scan(
 			&rsvp.ID,
 			&rsvp.EventID,
 			&rsvp.UserID,
@@ -132,12 +112,77 @@ func (r *RSVPRepository) GetRSVPsByEvent(eventID int) ([]models.RSVPWithUser, er
 			&rsvp.UpdatedAt,
 			&rsvp.FirstName,
 			&rsvp.LastName,
-		); err != nil {
+			&rsvp.Email,
+		)
+
+		if err != nil {
 			log.Printf("Error scanning RSVP row: %v", err)
 			return nil, err
 		}
+
 		rsvps = append(rsvps, rsvp)
 	}
 
+	if err = rows.Err(); err != nil {
+		log.Printf("Error iterating RSVP rows: %v", err)
+		return nil, err
+	}
+
 	return rsvps, nil
+}
+
+// GetRSVPCount gets the count of RSVPs by status for an event
+func (r *RSVPRepository) GetRSVPCount(eventID int) (models.RSVPCount, error) {
+	var count models.RSVPCount
+	count.EventID = eventID
+
+	// Get going count
+	err := r.DB.QueryRow(`
+		SELECT COUNT(*) FROM rsvps
+		WHERE event_id = $1 AND status = 'going'
+	`, eventID).Scan(&count.Going)
+
+	if err != nil {
+		log.Printf("Error getting going count: %v", err)
+		return count, err
+	}
+
+	// Get maybe count
+	err = r.DB.QueryRow(`
+		SELECT COUNT(*) FROM rsvps
+		WHERE event_id = $1 AND status = 'maybe'
+	`, eventID).Scan(&count.Maybe)
+
+	if err != nil {
+		log.Printf("Error getting maybe count: %v", err)
+		return count, err
+	}
+
+	// Get not going count
+	err = r.DB.QueryRow(`
+		SELECT COUNT(*) FROM rsvps
+		WHERE event_id = $1 AND status = 'not_going'
+	`, eventID).Scan(&count.NotGoing)
+
+	if err != nil {
+		log.Printf("Error getting not going count: %v", err)
+		return count, err
+	}
+
+	return count, nil
+}
+
+// DeleteRSVP deletes an RSVP
+func (r *RSVPRepository) DeleteRSVP(eventID, userID int) error {
+	_, err := r.DB.Exec(`
+		DELETE FROM rsvps
+		WHERE event_id = $1 AND user_id = $2
+	`, eventID, userID)
+
+	if err != nil {
+		log.Printf("Error deleting RSVP: %v", err)
+		return err
+	}
+
+	return nil
 }
