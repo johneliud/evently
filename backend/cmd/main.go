@@ -37,10 +37,17 @@ func main() {
 	eventRepo := repositories.NewEventRepository(database)
 	rsvpRepo := repositories.NewRSVPRepository(database)
 
+	// Initialize Google Calendar repository
+	calendarRepo, err := repositories.NewCalendarRepository()
+	if err != nil {
+		log.Fatalf("Failed to initialize calendar repository: %v", err)
+	}
+
 	// Initialize handlers
 	userHandler := controllers.NewUserHandler(userRepo)
 	eventHandler := controllers.NewEventHandler(eventRepo)
 	rsvpHandler := controllers.NewRSVPHandler(rsvpRepo, eventRepo)
+	calendarHandler := controllers.NewCalendarHandler(calendarRepo, eventRepo)
 
 	// Create a new ServeMux
 	mux := http.NewServeMux()
@@ -52,6 +59,12 @@ func main() {
 	mux.Handle("/api/events/user", corsMiddleware(http.HandlerFunc(eventHandler.GetUserEvents)))
 	mux.Handle("/api/events/upcoming", corsMiddleware(http.HandlerFunc(eventHandler.GetUpcomingEvents)))
 	mux.Handle("/api/events/search", corsMiddleware(http.HandlerFunc(eventHandler.SearchEvents)))
+
+	// Google Calendar endpoints
+	mux.Handle("/api/calendar/authorize", corsMiddleware(http.HandlerFunc(calendarHandler.AuthorizeCalendar)))
+	mux.Handle("/api/calendar/callback", corsMiddleware(http.HandlerFunc(calendarHandler.CalendarCallback)))
+	mux.Handle("/api/calendar/add-event", corsMiddleware(http.HandlerFunc(calendarHandler.AddEventToCalendar)))
+	mux.Handle("/api/calendar/check-connection", corsMiddleware(http.HandlerFunc(calendarHandler.CheckCalendarConnection)))
 	mux.Handle("/api/events/", corsMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 		if strings.HasSuffix(path, "/rsvp") {
