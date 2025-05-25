@@ -15,12 +15,15 @@ export default function GoogleCalendarButton({ eventId }) {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const response = await fetch('http://localhost:9000/api/calendar/check-connection', {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        'http://localhost:9000/api/calendar/check-connection',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Failed to check calendar connection');
@@ -46,25 +49,30 @@ export default function GoogleCalendarButton({ eventId }) {
 
       setIsLoading(true);
 
-      const response = await fetch('http://localhost:9000/api/calendar/authorize', {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        'http://localhost:9000/api/calendar/authorize',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Failed to get authorization URL');
       }
 
       const data = await response.json();
-      
+
       // Open the authorization URL in a new window
       window.open(data.auth_url, '_blank');
     } catch (error) {
       setNotification({
         type: 'error',
-        message: error.message || 'An error occurred while connecting to Google Calendar',
+        message:
+          error.message ||
+          'An error occurred while connecting to Google Calendar',
       });
     } finally {
       setIsLoading(false);
@@ -84,33 +92,41 @@ export default function GoogleCalendarButton({ eventId }) {
 
       setIsLoading(true);
 
-      const response = await fetch('http://localhost:9000/api/calendar/add-event', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          event_id: eventId,
-        }),
-      });
+      const response = await fetch(
+        'http://localhost:9000/api/calendar/add-event',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            event_id: eventId,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
-        
+
         // Check if authorization is required
-        if (response.status === 401 && errorData.status === 'authorization_required') {
+        if (
+          response.status === 401 &&
+          errorData.status === 'authorization_required'
+        ) {
           // Prompt user to connect their Google Calendar
           setIsConnected(false);
           throw new Error('Please connect your Google Calendar first');
         }
-        
-        throw new Error(errorData.message || 'Failed to add event to Google Calendar');
+
+        throw new Error(
+          errorData.message || 'Failed to add event to Google Calendar'
+        );
       }
 
       // We're not using the data, so we don't need to store it
       await response.json();
-      
+
       setNotification({
         type: 'success',
         message: 'Event added to Google Calendar successfully!',
@@ -118,7 +134,9 @@ export default function GoogleCalendarButton({ eventId }) {
     } catch (error) {
       setNotification({
         type: 'error',
-        message: error.message || 'An error occurred while adding the event to Google Calendar',
+        message:
+          error.message ||
+          'An error occurred while adding the event to Google Calendar',
       });
     } finally {
       setIsLoading(false);
@@ -154,16 +172,43 @@ export default function GoogleCalendarButton({ eventId }) {
         >
           {isLoading ? (
             <span className="flex items-center">
-              <svg className="w-5 h-5 mr-2 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <svg
+                className="w-5 h-5 mr-2 animate-spin"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
               </svg>
               Adding to Calendar...
             </span>
           ) : (
             <span className="flex items-center">
-              <svg className="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <svg
+                className="w-5 h-5 mr-2"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
               </svg>
               Add to Google Calendar
             </span>
@@ -177,16 +222,43 @@ export default function GoogleCalendarButton({ eventId }) {
         >
           {isLoading ? (
             <span className="flex items-center">
-              <svg className="w-5 h-5 mr-2 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <svg
+                className="w-5 h-5 mr-2 animate-spin"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
               </svg>
               Connecting...
             </span>
           ) : (
             <span className="flex items-center">
-              <svg className="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <svg
+                className="w-5 h-5 mr-2"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
               </svg>
               Connect Google Calendar
             </span>

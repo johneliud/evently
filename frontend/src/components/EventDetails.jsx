@@ -408,6 +408,15 @@ export default function EventDetails() {
             <span>{event.location}</span>
           </div>
 
+          {isLoggedIn && event && (
+            <div className="mb-8 border-t border-gray-200 dark:border-gray-700 py-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                Calendar Integration
+              </h3>
+              <GoogleCalendarButton eventId={id} />
+            </div>
+          )}
+
           {/* RSVP Section */}
           {!isEventCreator && (
             <div className="mb-8 border-t border-b border-gray-200 dark:border-gray-700 py-4">
