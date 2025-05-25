@@ -10,6 +10,7 @@ import UpcomingEvents from './components/UpcomingEvents';
 import EventDetails from './components/EventDetails';
 import EventSearch from './components/EventSearch';
 import CalendarConnected from './components/CalendarConnected';
+import AuthCallback from './components/AuthCallback';
 
 function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
@@ -57,6 +58,8 @@ function App() {
         return <EventSearch />;
       case '/calendar-connected':
         return <CalendarConnected />;
+      case '/auth/callback':
+        return <AuthCallback />;
       default: {
         // Check if user is authenticated
         const token = localStorage.getItem('token');
