@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -12,6 +13,8 @@ import (
 	"github.com/johneliud/evently/backend/models"
 	"github.com/johneliud/evently/backend/repositories"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
 // UserHandler handles user-related HTTP requests
@@ -131,4 +134,162 @@ func (h *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 		"message": "Login successful",
 	})
 	log.Println("Login successful")
+}
+
+// GoogleAuthURL returns the URL for Google OAuth
+func (h *UserHandler) GoogleAuthURL(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		log.Println("Method not allowed")
+		return
+	}
+
+	// Generate a random state token to prevent request forgery
+	state := fmt.Sprintf("auth-%d", time.Now().Unix())
+
+	// Create OAuth config
+	config := &oauth2.Config{
+		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+		ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+		RedirectURL:  "http://localhost:9000/api/auth/google/callback",
+		Scopes: []string{
+			"https://www.googleapis.com/auth/userinfo.email",
+			"https://www.googleapis.com/auth/userinfo.profile",
+		},
+		Endpoint: google.Endpoint,
+	}
+
+	// Store state in a cookie for verification
+	http.SetCookie(w, &http.Cookie{
+		Name:     "oauth_state",
+		Value:    state,
+		Path:     "/",
+		MaxAge:   int(time.Hour.Seconds()),
+		HttpOnly: true,
+		Secure:   false, // Set to true in production with HTTPS
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	// Get the authorization URL
+	authURL := config.AuthCodeURL(state, oauth2.AccessTypeOffline)
+
+	// Return the authorization URL
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"auth_url": authURL,
+	})
+}
+
+// GoogleCallback handles the OAuth callback from Google
+func (h *UserHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		log.Println("Method not allowed")
+		return
+	}
+
+	// Get the state and code from the query parameters
+	state := r.URL.Query().Get("state")
+	code := r.URL.Query().Get("code")
+
+	// Verify state to prevent CSRF
+	stateCookie, err := r.Cookie("oauth_state")
+	if err != nil || stateCookie.Value != state {
+		http.Error(w, "Invalid state parameter", http.StatusBadRequest)
+		log.Println("Invalid state parameter")
+		return
+	}
+
+	// Create OAuth config
+	config := &oauth2.Config{
+		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+		ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+		RedirectURL:  "http://localhost:9000/api/auth/google/callback",
+		Scopes: []string{
+			"https://www.googleapis.com/auth/userinfo.email",
+			"https://www.googleapis.com/auth/userinfo.profile",
+		},
+		Endpoint: google.Endpoint,
+	}
+
+	// Exchange the authorization code for a token
+	token, err := config.Exchange(r.Context(), code)
+	if err != nil {
+		http.Error(w, "Failed to exchange token", http.StatusInternalServerError)
+		log.Printf("Failed to exchange token: %v\n", err)
+		return
+	}
+
+	// Get user info from Google
+	client := config.Client(r.Context(), token)
+	resp, err := client.Get("https://www.googleapis.com/oauth2/v3/userinfo")
+	if err != nil {
+		http.Error(w, "Failed to get user info", http.StatusInternalServerError)
+		log.Printf("Failed to get user info: %v\n", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	// Parse user info
+	var userInfo struct {
+		Email     string `json:"email"`
+		FirstName string `json:"given_name"`
+		LastName  string `json:"family_name"`
+		Picture   string `json:"picture"`
+		Sub       string `json:"sub"` // Google's unique user ID
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
+		http.Error(w, "Failed to parse user info", http.StatusInternalServerError)
+		log.Printf("Failed to parse user info: %v\n", err)
+		return
+	}
+
+	// Check if user exists
+	user, err := h.UserRepo.GetUserByEmail(userInfo.Email)
+	if err != nil {
+		// User doesn't exist, create a new one
+		// Generate a random password for Google users
+		randomPassword := fmt.Sprintf("google_%d", time.Now().UnixNano())
+		
+		// Create user
+		id, err := h.UserRepo.CreateUser(models.UserSignupRequest{
+			Email:             userInfo.Email,
+			Password:          randomPassword,
+			ConfirmedPassword: randomPassword,
+			FirstName:         userInfo.FirstName,
+			LastName:          userInfo.LastName,
+		})
+		if err != nil {
+			http.Error(w, "Failed to create user", http.StatusInternalServerError)
+			log.Printf("Failed to create user: %v\n", err)
+			return
+		}
+		
+		// Get the newly created user
+		user, err = h.UserRepo.GetUserByID(id)
+		if err != nil {
+			http.Error(w, "Failed to get user", http.StatusInternalServerError)
+			log.Printf("Failed to get user: %v\n", err)
+			return
+		}
+	}
+
+	// Create JWT token
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id": user.ID,
+		"email":   user.Email,
+		"exp":     time.Now().Add(time.Hour * 24).Unix(),
+	})
+
+	// Sign the token with a secret key
+	tokenString, err := jwtToken.SignedString([]byte(os.Getenv("JWT_SECRET_KEY")))
+	if err != nil {
+		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
+		log.Printf("Failed to generate token: %v\n", err)
+		return
+	}
+
+	// Redirect to frontend with token
+	redirectURL := fmt.Sprintf("http://localhost:5173/auth/callback?token=%s&user_id=%d", tokenString, user.ID)
+	http.Redirect(w, r, redirectURL, http.StatusFound)
 }
