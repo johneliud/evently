@@ -54,7 +54,12 @@ func (h *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create user
-	id, err := h.UserRepo.CreateUser(req)
+	id, err := h.UserRepo.CreateUser(models.UserRequest{
+		Email:     req.Email,
+		Password:  req.Password,
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+	})
 	if err != nil {
 		if err.Error() == "email already exists" {
 			http.Error(w, "Email already exists", http.StatusConflict)
@@ -151,7 +156,7 @@ func (h *UserHandler) GoogleAuthURL(w http.ResponseWriter, r *http.Request) {
 	clientID := os.Getenv("GOOGLE_CLIENT_ID")
 	clientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
 
-	if clientID == "" || clientSecret == ""  {
+	if clientID == "" || clientSecret == "" {
 		log.Println("WARNING: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET environment variable is not set")
 		http.Error(w, "OAuth configuration error", http.StatusInternalServerError)
 		return
@@ -170,7 +175,6 @@ func (h *UserHandler) GoogleAuthURL(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Store state in a cookie for verification
-	// Use a more secure cookie setting
 	http.SetCookie(w, &http.Cookie{
 		Name:     "oauth_state",
 		Value:    state,
@@ -216,9 +220,9 @@ func (h *UserHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid state parameter", http.StatusBadRequest)
 		return
 	}
-	
+
 	log.Printf("State from cookie: %s, State from query: %s", stateCookie.Value, state)
-	
+
 	if stateCookie.Value != state {
 		log.Printf("State mismatch: cookie=%s, query=%s", stateCookie.Value, state)
 		http.Error(w, "Invalid state parameter", http.StatusBadRequest)
@@ -296,12 +300,11 @@ func (h *UserHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		randomPassword := fmt.Sprintf("google_%d", time.Now().UnixNano())
 
 		// Create user
-		id, err := h.UserRepo.CreateUser(models.UserSignupRequest{
-			Email:             userInfo.Email,
-			Password:          randomPassword,
-			ConfirmedPassword: randomPassword,
-			FirstName:         userInfo.FirstName,
-			LastName:          userInfo.LastName,
+		id, err := h.UserRepo.CreateUser(models.UserRequest{
+			Email:     userInfo.Email,
+			Password:  randomPassword,
+			FirstName: userInfo.FirstName,
+			LastName:  userInfo.LastName,
 		})
 		if err != nil {
 			http.Error(w, "Failed to create user", http.StatusInternalServerError)
