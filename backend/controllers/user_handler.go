@@ -147,10 +147,20 @@ func (h *UserHandler) GoogleAuthURL(w http.ResponseWriter, r *http.Request) {
 	// Generate a random state token to prevent request forgery
 	state := fmt.Sprintf("auth-%d", time.Now().Unix())
 
+	// Get client ID and secret from environment variables
+	clientID := os.Getenv("GOOGLE_CLIENT_ID")
+	clientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
+
+	if clientID == "" || clientSecret == ""  {
+		log.Println("WARNING: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET environment variable is not set")
+		http.Error(w, "OAuth configuration error", http.StatusInternalServerError)
+		return
+	}
+
 	// Create OAuth config
 	config := &oauth2.Config{
-		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
-		ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
 		RedirectURL:  "http://localhost:9000/api/auth/google/callback",
 		Scopes: []string{
 			"https://www.googleapis.com/auth/userinfo.email",
@@ -200,10 +210,20 @@ func (h *UserHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get client ID and secret from environment variables
+	clientID := os.Getenv("GOOGLE_CLIENT_ID")
+	clientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
+
+	if clientID == "" || clientSecret == "" {
+		log.Println("Google OAuth credentials not set")
+		http.Error(w, "OAuth configuration error", http.StatusInternalServerError)
+		return
+	}
+
 	// Create OAuth config
 	config := &oauth2.Config{
-		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
-		ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
 		RedirectURL:  "http://localhost:9000/api/auth/google/callback",
 		Scopes: []string{
 			"https://www.googleapis.com/auth/userinfo.email",
