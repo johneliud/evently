@@ -11,6 +11,8 @@ import EventDetails from './components/EventDetails';
 import EventSearch from './components/EventSearch';
 import CalendarConnected from './components/CalendarConnected';
 import AuthCallback from './components/AuthCallback';
+import Footer from './components/Footer';
+import GlobalNotification from './components/GlobalNotification';
 
 function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
@@ -82,14 +84,16 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen w-full">
+    <div className="flex flex-col min-h-screen">
+      <GlobalNotification />
       <Header toggleSidebar={toggleSidebar} />
-      <div className="flex min-h-[calc(100vh-64px)]">
+      <div className="flex flex-1">
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <main className="flex-1 py-5 px-4 lg:px-10 overflow-y-auto">
           {renderContent()}
         </main>
       </div>
+      <Footer />
     </div>
   );
 }
