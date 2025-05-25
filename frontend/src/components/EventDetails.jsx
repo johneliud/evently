@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Notification from './Notification';
 import EditEventForm from './EditEventForm';
+import GoogleCalendarButton from './GoogleCalendarButton';
 
 export default function EventDetails() {
   // Get the event ID from the URL path
