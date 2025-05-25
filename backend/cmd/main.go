@@ -55,6 +55,9 @@ func main() {
 	// Register handlers
 	mux.Handle("/api/signup", corsMiddleware(http.HandlerFunc(userHandler.SignUp)))
 	mux.Handle("/api/signin", corsMiddleware(http.HandlerFunc(userHandler.SignIn)))
+	// Add Google OAuth routes
+	mux.Handle("/api/auth/google", corsMiddleware(http.HandlerFunc(userHandler.GoogleAuthURL)))
+	mux.Handle("/api/auth/google/callback", corsMiddleware(http.HandlerFunc(userHandler.GoogleCallback)))
 	mux.Handle("/api/events", corsMiddleware(http.HandlerFunc(eventHandler.CreateEvent)))
 	mux.Handle("/api/events/user", corsMiddleware(http.HandlerFunc(eventHandler.GetUserEvents)))
 	mux.Handle("/api/events/upcoming", corsMiddleware(http.HandlerFunc(eventHandler.GetUpcomingEvents)))
@@ -103,18 +106,27 @@ func main() {
 	}
 }
 
-// corsMiddleware adds CORS headers to all responses
+// CORS middleware
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
-		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Authorization")
+		// Set CORS headers
+		origin := r.Header.Get("Origin")
+		if origin == "" {
+			origin = "http://localhost:5173" // Default to frontend URL if Origin header is not set
+		}
+		
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Allow-Credentials", "true") // Allow cookies
 
-		// Send 200 OK response for preflight requests
+		// Handle preflight requests
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
+
+		// Call the next handler
 		next.ServeHTTP(w, r)
 	})
 }

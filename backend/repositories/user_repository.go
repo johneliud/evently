@@ -27,9 +27,6 @@ func (r *UserRepository) CreateUser(user models.UserSignupRequest) (int, error) 
 		return id, fmt.Errorf("email already exists")
 	}
 
-	fmt.Println("id:", id)
-	fmt.Println("userEmail:", user.Email)
-
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("Error hashing password: %v", err)
@@ -56,11 +53,24 @@ func (r *UserRepository) GetUserByEmail(email string) (*models.User, error) {
 		"SELECT id, email, password, first_name, last_name, created_at, updated_at FROM users WHERE email = $1",
 		email,
 	).Scan(&user.ID, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.CreatedAt, &user.UpdatedAt)
-	
+
 	if err != nil {
 		log.Printf("Error getting user by email: %v", err)
 		return nil, err
 	}
-	
+
+	return &user, nil
+}
+
+// GetUserByID retrieves a user by ID
+func (r *UserRepository) GetUserByID(id int) (*models.User, error) {
+	var user models.User
+	err := r.DB.QueryRow("SELECT id, email, password, first_name, last_name, created_at, updated_at FROM users WHERE id = $1", id).Scan(
+		&user.ID, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.CreatedAt, &user.UpdatedAt,
+	)
+	if err != nil {
+		log.Printf("Error getting user by ID: %v", err)
+		return nil, err
+	}
 	return &user, nil
 }
