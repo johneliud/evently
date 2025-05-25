@@ -60,5 +60,21 @@ func RunMigrations(db *sql.DB) error {
 		return err
 	}
 
+	// Create user_calendar_tokens table
+	_, err = db.Exec(`
+        CREATE TABLE IF NOT EXISTS user_calendar_tokens (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id),
+            token TEXT NOT NULL,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id)
+        )
+    `)
+	if err != nil {
+		log.Println("Error creating user_calendar_tokens table: ", err)
+		return err
+	}
+
 	return err
 }
