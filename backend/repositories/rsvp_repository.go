@@ -83,8 +83,8 @@ func (r *RSVPRepository) GetRSVPByEventAndUser(eventID, userID int) (*models.RSV
 	return &rsvp, nil
 }
 
-// GetRSVPsByEvent gets all RSVPs for an event
-func (r *RSVPRepository) GetRSVPsByEvent(eventID int) ([]models.RSVPWithUser, error) {
+// GetRSVPs gets all RSVPs for an event
+func (r *RSVPRepository) GetRSVPs(eventID int) ([]models.RSVPWithUser, error) {
 	rows, err := r.DB.Query(`
 		SELECT r.id, r.event_id, r.user_id, r.status, r.created_at, r.updated_at,
 			   u.first_name, u.last_name, u.email

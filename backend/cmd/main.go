@@ -118,7 +118,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 		if origin == "" {
 			origin = "http://localhost:5173" // Default to frontend URL if Origin header is not set
 		}
-		
+
 		w.Header().Set("Access-Control-Allow-Origin", origin)
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
