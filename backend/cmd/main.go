@@ -17,7 +17,10 @@ func main() {
 	}
 
 	// Load environment variables from .env file if it exists
-	_ = godotenv.Load(".env")
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Printf("Failed loading .env: %v\n", err)
+	}
 
 	// Connect to the database
 	database, err := db.Connect()
@@ -40,6 +43,14 @@ func main() {
 	}
 
 	// Start the server
+	environmentState := os.Getenv("ENVIRONMENT")
+	if environmentState == "production" {
+		if err := srv.Start("0.0.0.0:" + port); err != nil {
+			log.Fatalf("Failed to start server: %v", err)
+		}
+		return
+	}
+
 	if err := srv.Start(":" + port); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
