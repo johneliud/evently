@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Notification from './Notification';
 import GoogleAuthButton from './GoogleAuthButton';
+import config from '../config';
 
 export default function SignupForm() {
   const [isLoading, setIsLoading] = useState(false);
@@ -40,7 +41,7 @@ export default function SignupForm() {
     }
 
     try {
-      const response = await fetch('http://localhost:9000/api/signup', {
+      const response = await fetch(`${config.apiBaseUrl}/api/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

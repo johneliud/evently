@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import Notification from './Notification';
+import config from '../config';
 
 export default function EventForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState(null);
-  
+
   // Get today's date in YYYY-MM-DD format for min attribute
   const today = new Date().toISOString().split('T')[0];
 
@@ -29,7 +30,7 @@ export default function EventForm() {
         throw new Error('You must be logged in to create an event');
       }
 
-      const response = await fetch('http://localhost:9000/api/events', {
+      const response = await fetch(`${config.apiBaseUrl}/api/events`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

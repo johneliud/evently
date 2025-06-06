@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Notification from './Notification';
+import config from '../config';
 
 export default function EventList() {
   const [events, setEvents] = useState([]);
@@ -18,7 +19,7 @@ export default function EventList() {
         throw new Error('You must be logged in to view events');
       }
 
-      const response = await fetch('http://localhost:9000/api/events/user', {
+      const response = await fetch(`${config.apiBaseUrl}/api/events/user`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,

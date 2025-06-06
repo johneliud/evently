@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Notification from './Notification';
+import config from '../config';
 
 export default function EditEventForm({ eventId, onCancel, onSuccess }) {
   const [event, setEvent] = useState(null);
@@ -11,7 +12,7 @@ export default function EditEventForm({ eventId, onCancel, onSuccess }) {
     const fetchEvent = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`http://localhost:9000/api/events/${eventId}`);
+        const response = await fetch(`${config.apiBaseUrl}/api/events/${eventId}`);
 
         if (!response.ok) {
           throw new Error('Failed to fetch event details');
@@ -52,7 +53,7 @@ export default function EditEventForm({ eventId, onCancel, onSuccess }) {
         throw new Error('You must be logged in to update an event');
       }
 
-      const response = await fetch(`http://localhost:9000/api/events/${eventId}`, {
+      const response = await fetch(`${config.apiBaseUrl}/api/events/${eventId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
