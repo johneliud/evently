@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Notification from './Notification';
 import EditEventForm from './EditEventForm';
 import GoogleCalendarButton from './GoogleCalendarButton';
+import config from '../config';
 
 export default function EventDetails() {
   // Get the event ID from the URL path
@@ -53,7 +54,7 @@ export default function EventDetails() {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `http://localhost:9000/api/events/${eventId}`
+        `${config.apiBaseUrl}/api/events/${eventId}`
       );
 
       if (!response.ok) {
@@ -83,7 +84,7 @@ export default function EventDetails() {
       if (!token) return;
 
       const response = await fetch(
-        `http://localhost:9000/api/events/${eventId}/rsvp`,
+        `${config.apiBaseUrl}/api/events/${eventId}/rsvp`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -106,7 +107,7 @@ export default function EventDetails() {
   async function fetchRsvpCounts(eventId) {
     try {
       const response = await fetch(
-        `http://localhost:9000/api/events/${eventId}/rsvp/count`
+        `${config.apiBaseUrl}/api/events/${eventId}/rsvp/count`
       );
 
       if (!response.ok) {
@@ -135,7 +136,7 @@ export default function EventDetails() {
       // If clicking the same status again, remove the RSVP
       if (rsvpStatus === status) {
         const response = await fetch(
-          `http://localhost:9000/api/events/${id}/rsvp`,
+          `${config.apiBaseUrl}/api/events/${id}/rsvp`,
           {
             method: 'DELETE',
             headers: {
@@ -157,7 +158,7 @@ export default function EventDetails() {
       } else {
         // Otherwise, update the RSVP
         const response = await fetch(
-          `http://localhost:9000/api/events/${id}/rsvp`,
+          `${config.apiBaseUrl}/api/events/${id}/rsvp`,
           {
             method: 'POST',
             headers: {
@@ -203,7 +204,7 @@ export default function EventDetails() {
       }
 
       const response = await fetch(
-        `http://localhost:9000/api/events/${event.id}`,
+        `${config.apiBaseUrl}/api/events/${event.id}`,
         {
           method: 'DELETE',
           headers: {
@@ -324,7 +325,7 @@ export default function EventDetails() {
       if (!token) return;
 
       const response = await fetch(
-        `http://localhost:9000/api/events/${eventId}/rsvps`,
+        `${config.apiBaseUrl}/api/events/${eventId}/rsvps`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

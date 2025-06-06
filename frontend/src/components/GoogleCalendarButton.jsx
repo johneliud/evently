@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Notification from './Notification';
+import config from '../config';
 
 export default function GoogleCalendarButton({ eventId }) {
   const [isConnected, setIsConnected] = useState(false);
@@ -16,7 +17,7 @@ export default function GoogleCalendarButton({ eventId }) {
       if (!token) return;
 
       const response = await fetch(
-        'http://localhost:9000/api/calendar/check-connection',
+        `${config.apiBaseUrl}/api/calendar/check-connection`,
         {
           method: 'GET',
           headers: {
@@ -50,7 +51,7 @@ export default function GoogleCalendarButton({ eventId }) {
       setIsLoading(true);
 
       const response = await fetch(
-        'http://localhost:9000/api/calendar/authorize',
+        `${config.apiBaseUrl}/api/calendar/authorize`,
         {
           method: 'GET',
           headers: {
@@ -100,7 +101,7 @@ export default function GoogleCalendarButton({ eventId }) {
       }
 
       const response = await fetch(
-        'http://localhost:9000/api/calendar/add-event',
+        `${config.apiBaseUrl}/api/calendar/add-event`,
         {
           method: 'POST',
           headers: {

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import Notification from './Notification';
+import config from '../config';
 
 export default function EventSearch() {
   const [events, setEvents] = useState([]);
@@ -31,7 +32,7 @@ export default function EventSearch() {
         if (endDate) params.append('end_date', endDate);
 
         const response = await fetch(
-          `http://localhost:9000/api/events/search?${params.toString()}`
+          `${config.apiBaseUrl}/api/events/search?${params.toString()}`
         );
 
         if (!response.ok) {

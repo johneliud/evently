@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Notification from './Notification';
+import config from '../config';
 
 export default function UpcomingEvents() {
   const [events, setEvents] = useState([]);
@@ -13,7 +14,7 @@ export default function UpcomingEvents() {
   async function fetchUpcomingEvents() {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:9000/api/events/upcoming');
+      const response = await fetch(`${config.apiBaseUrl}/api/events/upcoming`);
 
       if (!response.ok) {
         const data = await response.json();

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Notification from './Notification';
+import config from '../config';
 
 export default function GoogleAuthButton({ text = 'Sign in with Google' }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -10,7 +11,7 @@ export default function GoogleAuthButton({ text = 'Sign in with Google' }) {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch('http://localhost:9000/api/auth/google', {
+      const response = await fetch(`${config.apiBaseUrl}/api/auth/google`, {
         method: 'GET',
         credentials: 'include', // Include cookies in the request
       });
