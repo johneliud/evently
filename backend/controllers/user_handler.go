@@ -181,7 +181,7 @@ func (h *UserHandler) GoogleAuthURL(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		MaxAge:   3600, // 1 hour
 		HttpOnly: true,
-		Secure:   false, // Set to true in production with HTTPS
+		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
 	})
 
