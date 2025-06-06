@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/johneliud/evently/backend/db"
 	"github.com/johneliud/evently/backend/server"
@@ -9,10 +10,9 @@ import (
 )
 
 func main() {
-	// Load environment variables
-	if err := godotenv.Load(".env"); err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-	}
+	// Load environment variables from .env file if it exists
+	// This will be skipped in production where environment variables are set differently
+	_ = godotenv.Load(".env")
 
 	// Connect to the database
 	database, err := db.Connect()
@@ -34,8 +34,14 @@ func main() {
 		log.Fatalf("Failed to initialize server: %v", err)
 	}
 
+	// Get port from environment variable or use default
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "9000"
+	}
+
 	// Start the server
-	if err := srv.Start(":9000"); err != nil {
+	if err := srv.Start(":" + port); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }

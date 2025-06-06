@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/johneliud/evently/backend/controllers"
@@ -168,14 +169,24 @@ func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Set CORS headers
 		origin := r.Header.Get("Origin")
+
+		// If no origin is provided, use the default frontend URL based on environment
 		if origin == "" {
-			origin = "http://localhost:5173" // Default to frontend URL if Origin header is not set
+			// Check if we're in production
+			if os.Getenv("ENVIRONMENT") == "production" {
+				origin = os.Getenv("FRONTEND_URL")
+				if origin == "" {
+					origin = "https://evently-frontend.onrender.com"
+				}
+			} else {
+				origin = "http://localhost:5173"
+			}
 		}
 
 		w.Header().Set("Access-Control-Allow-Origin", origin)
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		w.Header().Set("Access-Control-Allow-Credentials", "true") // Allow cookies
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
 
 		// Handle preflight requests
 		if r.Method == "OPTIONS" {
