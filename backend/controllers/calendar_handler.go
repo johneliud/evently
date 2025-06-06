@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -101,8 +102,17 @@ func (h *CalendarHandler) CalendarCallback(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	var url string
+
+	environmentState := os.Getenv("ENVIRONMENT")
+	if environmentState == "production" {
+		url = "https://evently-frontend.onrender.com"
+	} else {
+		url = "http://localhost:5173"
+	}
+
 	// Redirect to the frontend success page
-	http.Redirect(w, r, "http://localhost:5173/calendar-connected", http.StatusFound)
+	http.Redirect(w, r, url+"/calendar-connected", http.StatusFound)
 }
 
 // AddEventToCalendar adds an event to the user's Google Calendar

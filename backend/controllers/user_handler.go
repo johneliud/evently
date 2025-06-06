@@ -162,11 +162,20 @@ func (h *UserHandler) GoogleAuthURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var url string
+
+	environmentState := os.Getenv("ENVIRONMENT")
+	if environmentState == "production" {
+		url = "https://evently-backend-gs5n.onrender.com"
+	} else {
+		url = "http://localhost:9000"
+	}
+
 	// Create OAuth config
 	config := &oauth2.Config{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
-		RedirectURL:  "http://localhost:9000/api/auth/google/callback",
+		RedirectURL:  url + "/api/auth/google/callback",
 		Scopes: []string{
 			"https://www.googleapis.com/auth/userinfo.email",
 			"https://www.googleapis.com/auth/userinfo.profile",
@@ -248,11 +257,20 @@ func (h *UserHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var url string
+
+	environmentState := os.Getenv("ENVIRONMENT")
+	if environmentState == "production" {
+		url = "https://evently-backend-gs5n.onrender.com"
+	} else {
+		url = "http://localhost:9000"
+	}
+
 	// Create OAuth config
 	config := &oauth2.Config{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
-		RedirectURL:  "http://localhost:9000/api/auth/google/callback",
+		RedirectURL:  url + "/api/auth/google/callback",
 		Scopes: []string{
 			"https://www.googleapis.com/auth/userinfo.email",
 			"https://www.googleapis.com/auth/userinfo.profile",
@@ -336,7 +354,13 @@ func (h *UserHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if environmentState == "production" {
+		url = "https://evently-frontend.onrender.com"
+	} else {
+		url = "http://localhost:5173"
+	}
+
 	// Redirect to frontend with token
-	redirectURL := fmt.Sprintf("http://localhost:5173/auth/callback?token=%s&user_id=%d", tokenString, user.ID)
+	redirectURL := fmt.Sprintf(url+"/auth/callback?token=%s&user_id=%d", tokenString, user.ID)
 	http.Redirect(w, r, redirectURL, http.StatusFound)
 }

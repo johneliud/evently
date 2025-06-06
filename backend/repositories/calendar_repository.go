@@ -39,7 +39,16 @@ func NewCalendarRepository() (*CalendarRepository, error) {
 		return nil, fmt.Errorf("unable to parse client credentials: %v", err)
 	}
 
-	redirectURI := "http://localhost:9000/api/calendar/callback"
+	var url string
+
+	environmentState := os.Getenv("ENVIRONMENT")
+	if environmentState == "production" {
+		url = "https://evently-backend-gs5n.onrender.com"
+	} else {
+		url = "http://localhost:9000"
+	}
+
+	redirectURI := url + "/api/calendar/callback"
 	config.RedirectURL = redirectURI
 
 	return &CalendarRepository{
