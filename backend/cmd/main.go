@@ -11,7 +11,6 @@ import (
 
 func main() {
 	// Load environment variables from .env file if it exists
-	// This will be skipped in production where environment variables are set differently
 	_ = godotenv.Load(".env")
 
 	// Connect to the database
