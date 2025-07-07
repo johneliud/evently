@@ -10,16 +10,16 @@ import (
 )
 
 func main() {
+	// Ignore error in production while loading .env
+	_ = godotenv.Load("../.env")
+	// if err != nil {
+	// 	log.Printf("Failed loading .env: %v\n", err)
+	// }
+
 	// Get port from environment variable or use default
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "9000"
-	}
-
-	// Load environment variables from .env file if it exists
-	err := godotenv.Load("../.env")
-	if err != nil {
-		log.Printf("Failed loading .env: %v\n", err)
 	}
 
 	// Connect to the database
