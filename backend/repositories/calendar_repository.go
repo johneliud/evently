@@ -24,7 +24,7 @@ type CalendarRepository struct {
 func NewCalendarRepository() (*CalendarRepository, error) {
 	credFile := os.Getenv("GOOGLE_CREDENTIALS_FILE")
 	if credFile == "" {
-		credFile = "google_client_credentials.json"
+		credFile = "../google_client_credentials.json"
 	}
 
 	data, err := os.ReadFile(credFile)
