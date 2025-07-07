@@ -176,7 +176,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 			if os.Getenv("ENVIRONMENT") == "production" {
 				origin = os.Getenv("FRONTEND_URL")
 				if origin == "" {
-					origin = "https://evently-frontend.onrender.com"
+					origin = "https://evently-dgq9.onrender.com"
 				}
 			} else {
 				origin = "http://localhost:5173"

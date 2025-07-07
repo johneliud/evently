@@ -355,7 +355,7 @@ func (h *UserHandler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if environmentState == "production" {
-		url = "https://evently-frontend.onrender.com"
+		url = "https://evently-dgq9.onrender.com"
 	} else {
 		url = "http://localhost:5173"
 	}
